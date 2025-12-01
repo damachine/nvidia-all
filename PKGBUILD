@@ -410,6 +410,7 @@ source=($_source_name
         'Add-IBT-support.diff'
         'gcc-15.diff'
         'kernel-6.17.patch'
+        '0003-nvidia-uvm-Remove-unused-get_devmap_page-parameter.patch'
 )
 
 msg2 "Selected driver integrity check behavior (md5sum or SKIP): $_md5sum" # If the driver is "known", return md5sum. If it isn't, return SKIP
@@ -475,7 +476,8 @@ md5sums=("$_md5sum"
          '42a482aa44953061cbbf9a495fcad926'
          '7143f20dbb3333ea6304540b5318bacb'
          '6c26d0df1e30c8bedf6abfe99e842944'
-         'c39df46bb99047ca7d09f9122a7370a8')
+         'c39df46bb99047ca7d09f9122a7370a8'
+         'SKIP')
 
 if [ "$_open_source_modules" = "true" ]; then
   if [[ "$_srcbase" == "NVIDIA-kernel-module-source" ]]; then
