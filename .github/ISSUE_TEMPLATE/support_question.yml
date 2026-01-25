@@ -1,0 +1,67 @@
+name: "Support / Question"
+about: "Ask for help or support. Include system info and steps already tried."
+title: ""
+labels:
+  - support
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: "Short summary"
+      description: "One-line description of your problem or question"
+
+  - type: input
+    id: distro
+    attributes:
+      label: "Distribution & version"
+      description: "e.g. Arch Linux, Manjaro"
+
+  - type: input
+    id: kernel
+    attributes:
+      label: "Kernel version"
+      description: "Output of `uname -r` and installed headers"
+
+  - type: input
+    id: driver
+    attributes:
+      label: "NVIDIA driver version / branch"
+
+  - type: dropdown
+    id: driver_type
+    attributes:
+      label: "Driver type"
+      description: "Proprietary or open-gpu-kernel-modules driver in use"
+      options:
+        - "proprietary (nvidia)"
+        - "open-gpu-kernel-modules (NVIDIA)"
+
+  - type: dropdown
+    id: display_server
+    attributes:
+      label: "Display server"
+      description: "Which display server are you using?"
+      options:
+        - "Xorg"
+        - "Wayland"
+        - "Other / mixed"
+
+  - type: checkboxes
+    id: tried
+    attributes:
+      label: "Steps already tried"
+      options:
+        - "Rebuilt DKMS / reinstalled module"
+        - "Installed kernel headers"
+        - "Checked udev/modprobe hooks"
+        - "Ran nvidia-bug-report.sh"
+
+  - type: textarea
+    id: details
+    attributes:
+      label: "Details / Logs"
+      description: "Paste logs, config snippets or command output"
+
+  - type: markdown
+    attributes:
+      value: "Provide attachments where helpful. None of the fields are required."

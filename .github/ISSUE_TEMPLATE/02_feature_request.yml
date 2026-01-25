@@ -1,0 +1,48 @@
+name: "Feature request"
+about: "Suggest a feature or improvement. Provide motivation and compatibility notes."
+title: ""
+labels:
+  - feature
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: "Short summary"
+      description: "One-line description of the requested feature"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "Describe the feature and what it should do"
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: "Use case / Motivation"
+      description: "Why is this useful? Who benefits?"
+
+  - type: input
+    id: driver_range
+    attributes:
+      label: "Target driver(s) / Kernel range"
+      description: "Optional: affected or required driver versions / kernel ranges"
+
+  - type: dropdown
+    id: driver_type
+    attributes:
+      label: "Driver type"
+      description: "If applicable, specify proprietary or open-gpu-kernel-modules driver"
+      options:
+        - "proprietary (nvidia)"
+        - "open-gpu-kernel-modules (NVIDIA)"
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: "Implementation notes / links"
+      description: "Optional: implementation ideas, links to patches or references"
+
+  - type: markdown
+    attributes:
+      value: "All fields are optional — maintainers may follow up for details."

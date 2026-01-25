@@ -1,0 +1,65 @@
+name: "Bug report"
+about: "Report a bug: include distro, kernel and driver information if available."
+title: ""
+labels:
+  - bug
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: "Short summary"
+      description: "One-line summary of the issue"
+      placeholder: "e.g. Blank screen after driver update"
+
+  - type: input
+    id: distro
+    attributes:
+      label: "Distribution & version"
+      description: "e.g. Arch Linux, Manjaro"
+
+  - type: input
+    id: kernel
+    attributes:
+      label: "Kernel version"
+      description: "Output of `uname -r` and the installed kernel-headers package"
+
+  - type: input
+    id: driver
+    attributes:
+      label: "NVIDIA driver version / branch"
+      description: "e.g. 535.161.07, 470-series, vulkan-dev"
+
+  - type: dropdown
+    id: driver_type
+    attributes:
+      label: "Driver type"
+      description: "Proprietary or open-gpu-kernel-modules driver in use"
+      options:
+        - "proprietary (nvidia)"
+        - "open-gpu-kernel-modules (NVIDIA)"
+
+  - type: dropdown
+    id: dkms
+    attributes:
+      label: "DKMS used?"
+      description: "Was the module installed via DKMS or regular package?"
+      options:
+        - "yes"
+        - "no"
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Reproduction steps"
+      description: "Minimal steps to reproduce the issue"
+      placeholder: "1) ... 2) ..."
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Relevant logs / output"
+      description: "Paste `dmesg`, `journalctl -b`, Xorg/Wayland logs or `nvidia-bug-report.sh` output"
+
+  - type: markdown
+    attributes:
+      value: "Attach files to the issue if available. None of the fields above are required; maintainers may ask for more details."
