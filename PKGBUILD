@@ -1760,8 +1760,8 @@ build() {
       warning "Found linux src in: ${_linuxsrc}"
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
-    CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
-    #CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LD=ld.lld SYSSRC="${_linuxsrc}"
+    #CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
+    CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LLVM=1 CC=clang LD=ld.lld IGNORE_CC_MISMATCH=1 SYSSRC="${_linuxsrc}"
   fi
 }
 
