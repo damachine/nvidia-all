@@ -1760,8 +1760,13 @@ build() {
       warning "Found linux src in: ${_linuxsrc}"
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
-    #CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
-    CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LLVM=1 CC=clang LD=ld.lld IGNORE_CC_MISMATCH=1 SYSSRC="${_linuxsrc}"
+    if command -v ld.lld &> /dev/null; then
+      msg2 "Using LLVM linker (ld.lld)"
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LD=ld.lld IGNORE_CC_MISMATCH=1 SYSSRC="${_linuxsrc}"
+    else
+      msg2 "Using default linker (ld.lld not found)"
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) IGNORE_CC_MISMATCH=1 SYSSRC="${_linuxsrc}"
+    fi
   fi
 }
 
@@ -2350,10 +2355,13 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
       provides=('NVIDIA-MODULE')
 
       cd ${_srcbase}-${pkgver}
-      _extradir="/usr/lib/modules/$(</usr/src/linux/version)/extramodules"
-      #_extradir="/usr/lib/modules/$(</proc/sys/kernel/osrelease)/extramodules"
+      _extradir="/usr/lib/modules/$(uname -r)/extramodules"
       install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
-      find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
+      if command -v llvm-strip &> /dev/null; then
+        find "${pkgdir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
+      else
+        find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
+      fi
       find "${pkgdir}" -name '*.ko' -exec xz {} +
 
       # Force module to load even on unsupported GPUs
