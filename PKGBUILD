@@ -497,7 +497,7 @@ md5sums=("$_md5sum"
          '871d01b7cc2d7a1b31fc5f6e9b57cce2'
          '24bd1c8e7b9265020969a8da2962e114'
          '84ca49afabf4907f19c81e0bb56b5873'
-         'a060f29a12cb0aa1ce1cad0bedcaa4b3' # nvidia-patch.sh
+         '5fd6eac00d4ab2ead6faa909482a6485' # nvidia-patch.sh
          '78e9142b9597dfb95221df6573237b67' # nvidia-modprobe.conf
          '47d55754a2ccb7e4b5cdbbc943a0a17b' # nvidia-modprobe-mobile.conf
 )
@@ -1780,8 +1780,23 @@ build() {
       warning "Found linux src in: ${_linuxsrc}"
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
-    CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
-    #CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LD=ld.lld SYSSRC="${_linuxsrc}"
+    if command -v ld.lld &> /dev/null; then
+      msg2 "Using LLVM linker (ld.lld)"
+        CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) \
+          CC=clang \
+          LD=ld.lld \
+          AR=llvm-ar \
+          NM=llvm-nm \
+          OBJCOPY=llvm-objcopy \
+          OBJDUMP=llvm-objdump \
+          READELF=llvm-readelf \
+          STRIP=llvm-strip \
+          IGNORE_CC_MISMATCH=1 \
+          SYSSRC="${_linuxsrc}"
+    else
+      msg2 "Using default linker (ld.lld not found)"
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) IGNORE_CC_MISMATCH=1 SYSSRC="${_linuxsrc}"
+    fi
   fi
 }
 
@@ -2399,10 +2414,13 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
       provides=('NVIDIA-MODULE')
 
       cd ${_srcbase}-${pkgver}
-      _extradir="/usr/lib/modules/$(</usr/src/linux/version)/extramodules"
-      #_extradir="/usr/lib/modules/$(</proc/sys/kernel/osrelease)/extramodules"
+      _extradir="/usr/lib/modules/$(uname -r)/extramodules"
       install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
-      find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
+      if command -v llvm-strip &> /dev/null; then
+        find "${pkgdir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
+      else
+        find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
+      fi
       find "${pkgdir}" -name '*.ko' -exec xz {} +
 
       # Force module to load even on unsupported GPUs
