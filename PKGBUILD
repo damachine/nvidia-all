@@ -497,7 +497,7 @@ md5sums=("$_md5sum"
          '871d01b7cc2d7a1b31fc5f6e9b57cce2'
          '24bd1c8e7b9265020969a8da2962e114'
          '84ca49afabf4907f19c81e0bb56b5873'
-         '5fd6eac00d4ab2ead6faa909482a6485' # nvidia-patch.sh
+         'a060f29a12cb0aa1ce1cad0bedcaa4b3' # nvidia-patch.sh
          '78e9142b9597dfb95221df6573237b67' # nvidia-modprobe.conf
          '47d55754a2ccb7e4b5cdbbc943a0a17b' # nvidia-modprobe-mobile.conf
 )
