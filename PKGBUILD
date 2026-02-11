@@ -2280,16 +2280,29 @@ nvidia-utils-tkg() {
 
     # Install performance optimizations
     # Default to false if _perf_optimizations is empty
+    # Options: false, true, cuda, vram
+    # - false: no optimizations (default)
+    # - true: apply both CUDA and VRAM optimizations
+    # - vram: only apply VRAM usage limit
+    # - cuda: only apply CUDA performance optimization
     _perf_optimizations="${_perf_optimizations:-false}"
+    
     # Check and apply performance tweaks
-    if [[ "${_perf_optimizations}" == "true" ]]; then
+    if [[ "${_perf_optimizations}" != "false" ]]; then
       if (( ${pkgver%%.*} >= 580 )); then
-        msg2 "Applying performance optimizations..."
-        # Limit vram usage
-        # https://github.com/Frogging-Family/nvidia-all/blob/master/system/limit-vram-usage
-        install -Dm644 "${srcdir}/limit-vram-usage" "${pkgdir}/etc/nvidia/nvidia-application-profiles-rc.d/limit-vram-usage"
-        # Allow full perf while streaming/recording (see: NVIDIA/open-gpu-kernel-modules#333)
-        install -Dm644 "${srcdir}/cuda-no-stable-perf-limit" "${pkgdir}/etc/nvidia/nvidia-application-profiles-rc.d/cuda-no-stable-perf-limit"
+        # Apply VRAM limit if requested
+        if [[ "${_perf_optimizations}" == "true" ]] || [[ "${_perf_optimizations}" == "vram" ]]; then
+          msg2 "Applying VRAM usage limit optimization..."
+          # Limit vram usage
+          # https://github.com/Frogging-Family/nvidia-all/blob/master/system/limit-vram-usage
+          install -Dm644 "${srcdir}/limit-vram-usage" "${pkgdir}/etc/nvidia/nvidia-application-profiles-rc.d/limit-vram-usage"
+        fi
+        # Apply CUDA performance optimization if requested
+        if [[ "${_perf_optimizations}" == "true" ]] || [[ "${_perf_optimizations}" == "cuda" ]]; then
+          msg2 "Applying CUDA performance optimization..."
+          # Allow full perf while streaming/recording (see: NVIDIA/open-gpu-kernel-modules#333)
+          install -Dm644 "${srcdir}/cuda-no-stable-perf-limit" "${pkgdir}/etc/nvidia/nvidia-application-profiles-rc.d/cuda-no-stable-perf-limit"
+        fi
       else
         warning "Performance optimizations require driver version >= 580 (current: ${pkgver})"
       fi
@@ -2301,7 +2314,7 @@ nvidia-utils-tkg() {
     # Default to false if _modprobe_mobile is empty
     _modprobe_mobile="${_modprobe_mobile:-false}"
     # Check driver version and apply advanced NVIDIA module parameters (NVreg_*)
-    if (( ${pkgver%%.*} >= 590 )); then
+    if (( ${pkgver%%.*} >= 580 )); then
       if [[ "${_modprobe}" == "true" ]]; then
         msg2 "Applying advanced NVIDIA module parameters..."
         install -Dm644 "${srcdir}/nvidia-modprobe.conf" "${pkgdir}/usr/lib/modprobe.d/${pkgname}-modprobe.conf"
