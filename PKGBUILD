@@ -1783,19 +1783,12 @@ build() {
     if command -v ld.lld &> /dev/null; then
       msg2 "Using LLVM linker (ld.lld)"
         CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) \
-          CC=clang \
           LD=ld.lld \
-          AR=llvm-ar \
-          NM=llvm-nm \
-          OBJCOPY=llvm-objcopy \
-          OBJDUMP=llvm-objdump \
-          READELF=llvm-readelf \
-          STRIP=llvm-strip \
           IGNORE_CC_MISMATCH=1 \
           SYSSRC="${_linuxsrc}"
     else
       msg2 "Using default linker (ld.lld not found)"
-      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) IGNORE_CC_MISMATCH=1 SYSSRC="${_linuxsrc}"
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
     fi
   fi
 }
