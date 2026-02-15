@@ -1134,7 +1134,7 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         _whitelist612=( 565.57* )
       fi
 
-      # 6.19 - Explicit handling for 470.x proprietary driver
+      # 6.19
       if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
         if [[ $pkgver = 470* ]]; then
           cd "$srcdir"/"$_pkg"/kernel-$_kernel
@@ -1743,6 +1743,15 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
           cd "$srcdir"/"$_pkg"/kernel-dkms
           msg2 "Applying kernel-6.19-470.patch for $_kernel..."
           patch -Np1 --fuzz=3 -i "$srcdir"/kernel-6.19-470.patch
+        fi
+      fi
+
+      if [ "$_gcc14" = "true" ]; then
+        msg2 "Applying gcc-14 patch..."
+        if [[ $pkgver = 470* ]]; then
+          patch -Np1 -i "$srcdir"/gcc-14-470.diff
+        else
+          patch -Np1 -i "$srcdir"/gcc-14.diff
         fi
       fi
 
