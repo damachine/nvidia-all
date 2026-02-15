@@ -1255,7 +1255,7 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
 
           if [ "$patchy" = "1" ]; then
             msg2 "Applying $_p for $_kernel..."
-            patch -p1 -i "$srcdir"/$_p
+            patch -p2 -i "$srcdir"/$_p
           else
             msg2 "Skipping $_p as it doesn't apply to this driver version..."
           fi
