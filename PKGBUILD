@@ -657,6 +657,7 @@ prepare() {
     fi
 
     # 6.19 whitelist definition
+    _open_whitelist619=( 590* )
     _open_whitelist619_580=( 580* )
     # Add future kernel version whitelists here following the same pattern
 
