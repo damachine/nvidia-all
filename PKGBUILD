@@ -807,7 +807,7 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
     # Loop kernels (4.15.0-1-ARCH, 4.14.5-1-ck, ...)
     local -a _kernels
     if [ -n "$_kerneloverride" ]; then
-      _kernels="$_kerneloverride"
+      _kernels=("$_kerneloverride")
     else
       mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
     fi
@@ -1782,10 +1782,7 @@ build() {
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
     if command -v ld.lld &> /dev/null; then
       msg2 "Using LLVM linker (ld.lld)"
-        CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) \
-          LD=ld.lld \
-          IGNORE_CC_MISMATCH=1 \
-          SYSSRC="${_linuxsrc}"
+        CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LD=ld.lld SYSSRC="${_linuxsrc}"
     else
       msg2 "Using default linker (ld.lld not found)"
       CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
