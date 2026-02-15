@@ -1138,15 +1138,6 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
       if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
         if [[ $pkgver = 470* ]]; then
           cd "$srcdir"/"$_pkg"/kernel-$_kernel
-          
-          # Add -fms-extensions flag to build_cflags() for 470.256.02
-          # This is needed for kernel 6.19 which requires it in Linux headers
-          sed -i '/^}$/,/^CONFTEST_PREAMBLE=/{/^}$/{
-            i\
-\    # Enable -fms-extensions flag for kernel 6.19+ (required by Linux headers)\
-\    CFLAGS="$CFLAGS -fms-extensions"
-          }}' conftest.sh
-          
           msg2 "Applying kernel-6.19-470.patch for $_kernel..."
           patch -Np1 -i "$srcdir"/kernel-6.19-470.patch
         fi
@@ -1750,15 +1741,6 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
       if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
         if [[ $pkgver = 470* ]]; then
           cd "$srcdir"/"$_pkg"/kernel-dkms
-          
-          # Add -fms-extensions flag to build_cflags() for 470.256.02
-          # This is needed for kernel 6.19 which requires it in Linux headers
-          sed -i '/^}$/,/^CONFTEST_PREAMBLE=/{/^}$/{
-            i\
-\    # Enable -fms-extensions flag for kernel 6.19+ (required by Linux headers)\
-\    CFLAGS="$CFLAGS -fms-extensions"
-          }}' conftest.sh
-          
           msg2 "Applying kernel-6.19-470.patch for $_kernel..."
           patch -Np1 -i "$srcdir"/kernel-6.19-470.patch
         fi
