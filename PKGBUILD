@@ -1137,7 +1137,7 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
       # 6.19
       if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
         _kernel619="1"
-        _whitelist619=( 470* 580* )
+        _whitelist619=( 470* )
       fi
 
       if [ "$_gcc14" = "true" ]; then
@@ -1160,6 +1160,10 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
 
       # Loop patches (linux-4.15.patch, lol.patch, ...)
       for _p in $(printf -- '%s\n' ${source[@]} | grep '\.patch$'); do  # https://stackoverflow.com/a/21058239/1821548
+        # Skip patches that are for kernel-open (open-source modules only)
+        [[ $_p == *"kernel-6.19.patch"* ]] && continue
+        [[ $_p == *"kernel-6.19-580.patch"* ]] && continue
+        
         # Patch version (4.15, "", ...)
         _patch=$(echo $_p | grep -Po "\d+\.\d+")
 
@@ -1244,9 +1248,8 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         if [ "$_patch" = "6.12" ]; then
           _whitelist=(${_whitelist612[@]})
         fi
-        # Skip 6.19 here - handled separately below with -p1
         if [ "$_patch" = "6.19" ]; then
-          continue
+          _whitelist=(${_whitelist619[@]})
         fi
         patchy=0
         if (( $(vercmp "$_kernel" "$_patch") >= 0 )); then
@@ -1256,31 +1259,12 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
 
           if [ "$patchy" = "1" ]; then
             msg2 "Applying $_p for $_kernel..."
-            patch -p2 -i "$srcdir"/$_p
+            patch -p1 --fuzz=3 -i "$srcdir"/$_p
           else
             msg2 "Skipping $_p as it doesn't apply to this driver version..."
           fi
         fi
       done
-
-      # 6.19 patches
-      if [ "$_kernel619" = "1" ]; then
-        patchy=0
-        for yup in "${_whitelist619[@]}"; do
-          [[ $pkgver = $yup ]] && patchy=1
-        done
-        if [ "$patchy" = "1" ]; then
-          cd "$srcdir"/"$_pkg"/kernel-$_kernel
-          if (( ${pkgver%%.*} == 580 )); then
-            msg2 "Applying kernel-6.19-580.patch for $_kernel..."
-            patch -p1 -i "$srcdir"/kernel-6.19-580.patch
-          elif (( ${pkgver%%.*} == 470 )); then
-            msg2 "Applying kernel-6.19-470.patch for $_kernel..."
-            patch -p1 -i "$srcdir"/kernel-6.19-470.patch
-          fi
-          cd "$srcdir"/"$_pkg"
-        fi
-      fi
 
       cd ..
 
@@ -1765,12 +1749,9 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         done
         if [ "$patchy" = "1" ]; then
           cd "$srcdir"/"$_pkg"/kernel-dkms
-          if (( ${pkgver%%.*} == 580 )); then
-            msg2 "Applying kernel-6.19-580.patch for dkms..."
-            patch -Np1 -i "$srcdir"/kernel-6.19-580.patch
-          elif (( ${pkgver%%.*} == 470 )); then
+          if (( ${pkgver%%.*} == 470 )); then
             msg2 "Applying kernel-6.19-470.patch for dkms..."
-            patch -Np1 -i "$srcdir"/kernel-6.19-470.patch
+            patch -Np1 --fuzz=3 -i "$srcdir"/kernel-6.19-470.patch
           fi
           cd "$srcdir"
         else
