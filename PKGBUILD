@@ -1755,15 +1755,6 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         fi
       fi
 
-      if [ "$_gcc14" = "true" ]; then
-        msg2 "Applying gcc-14 patch..."
-        if [[ $pkgver = 470* ]]; then
-          patch -Np1 -i "$srcdir"/gcc-14-470.diff
-        else
-          patch -Np1 -i "$srcdir"/gcc-14.diff
-        fi
-      fi
-
       if [ "$_gcc15" = "true" ]; then
         msg2 "Applying gcc-15 patch..."
         patch -Np1 -i "$srcdir"/gcc-15.diff
