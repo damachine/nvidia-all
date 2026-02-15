@@ -419,6 +419,7 @@ source=($_source_name
         '50-nvidia-cuda-disable-perf-boost.conf'
         'kernel-6.19.patch'
         'kernel-6.19-580.patch'
+        'kernel-6.19-470.patch'
         '0001-Enable-atomic-kernel-modesetting-by-default.diff'
         '0002-Add-IBT-support.diff'
         'nvidia-patch.sh'
@@ -495,6 +496,7 @@ md5sums=("$_md5sum"
          'f6d0a9b1e503d0e8c026a20b61f889c2'
          '0c0b692368eef7a511f22adddc23d8a2'
          '871d01b7cc2d7a1b31fc5f6e9b57cce2'
+         '33d4a80f467ce96cd98b1d79aad720a5'
          '24bd1c8e7b9265020969a8da2962e114'
          '84ca49afabf4907f19c81e0bb56b5873'
          'a060f29a12cb0aa1ce1cad0bedcaa4b3' # nvidia-patch.sh
@@ -1132,6 +1134,12 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         _whitelist612=( 565.57* )
       fi
 
+      # 6.19
+      if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
+        _kernel619="1"
+        _whitelist619=( 470* 580* )
+      fi
+
       if [ "$_gcc14" = "true" ]; then
         cd "$srcdir"/"$_pkg"/kernel-$_kernel
         msg2 "Applying gcc-14 patch..."
@@ -1236,6 +1244,10 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         if [ "$_patch" = "6.12" ]; then
           _whitelist=(${_whitelist612[@]})
         fi
+        # Skip 6.19 here - handled separately below with -p1
+        if [ "$_patch" = "6.19" ]; then
+          continue
+        fi
         patchy=0
         if (( $(vercmp "$_kernel" "$_patch") >= 0 )); then
           for yup in "${_whitelist[@]}"; do
@@ -1250,6 +1262,25 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
           fi
         fi
       done
+
+      # 6.19 patches
+      if [ "$_kernel619" = "1" ]; then
+        patchy=0
+        for yup in "${_whitelist619[@]}"; do
+          [[ $pkgver = $yup ]] && patchy=1
+        done
+        if [ "$patchy" = "1" ]; then
+          cd "$srcdir"/"$_pkg"/kernel-$_kernel
+          if (( ${pkgver%%.*} == 580 )); then
+            msg2 "Applying kernel-6.19-580.patch for $_kernel..."
+            patch -p1 -i "$srcdir"/kernel-6.19-580.patch
+          elif (( ${pkgver%%.*} == 470 )); then
+            msg2 "Applying kernel-6.19-470.patch for $_kernel..."
+            patch -p1 -i "$srcdir"/kernel-6.19-470.patch
+          fi
+          cd "$srcdir"/"$_pkg"
+        fi
+      fi
 
       cd ..
 
@@ -1723,6 +1754,27 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
           patch -Np1 -i "$srcdir"/kernel-6.12.patch
         else
           msg2 "Skipping kernel-6.12.patch as it doesn't apply to this driver version..."
+        fi
+      fi
+
+      # 6.19
+      if [ "$_kernel619" = "1" ]; then
+        patchy=0
+        for yup in "${_whitelist619[@]}"; do
+          [[ $pkgver = $yup ]] && patchy=1
+        done
+        if [ "$patchy" = "1" ]; then
+          cd "$srcdir"/"$_pkg"/kernel-dkms
+          if (( ${pkgver%%.*} == 580 )); then
+            msg2 "Applying kernel-6.19-580.patch for dkms..."
+            patch -Np1 -i "$srcdir"/kernel-6.19-580.patch
+          elif (( ${pkgver%%.*} == 470 )); then
+            msg2 "Applying kernel-6.19-470.patch for dkms..."
+            patch -Np1 -i "$srcdir"/kernel-6.19-470.patch
+          fi
+          cd "$srcdir"
+        else
+          msg2 "Skipping kernel-6.19 patches as they don't apply to this driver version..."
         fi
       fi
 
