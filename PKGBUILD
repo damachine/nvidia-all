@@ -1139,7 +1139,7 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         if [[ $pkgver = 470* ]]; then
           cd "$srcdir"/"$_pkg"/kernel-$_kernel
           msg2 "Applying kernel-6.19-470.patch for $_kernel..."
-          patch -Np1 --fuzz=3 -i "$srcdir"/kernel-6.19-470.patch
+          patch -Np1 -i "$srcdir"/kernel-6.19-470.patch
         fi
       fi
 
