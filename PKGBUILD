@@ -1134,10 +1134,13 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         _whitelist612=( 565.57* )
       fi
 
-      # 6.19
+      # 6.19 - Explicit handling for 470.x proprietary driver
       if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
-        _kernel619="1"
-        _whitelist619=( 470* )
+        if [[ $pkgver = 470* ]]; then
+          cd "$srcdir"/"$_pkg"/kernel-$_kernel
+          msg2 "Applying kernel-6.19-470.patch for $_kernel..."
+          patch -Np1 --fuzz=3 -i "$srcdir"/kernel-6.19-470.patch
+        fi
       fi
 
       if [ "$_gcc14" = "true" ]; then
@@ -1160,10 +1163,6 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
 
       # Loop patches (linux-4.15.patch, lol.patch, ...)
       for _p in $(printf -- '%s\n' ${source[@]} | grep '\.patch$'); do  # https://stackoverflow.com/a/21058239/1821548
-        # Skip patches that are for kernel-open (open-source modules only)
-        [[ $_p == *"kernel-6.19.patch"* ]] && continue
-        [[ $_p == *"kernel-6.19-580.patch"* ]] && continue
-        
         # Patch version (4.15, "", ...)
         _patch=$(echo $_p | grep -Po "\d+\.\d+")
 
@@ -1248,9 +1247,6 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         if [ "$_patch" = "6.12" ]; then
           _whitelist=(${_whitelist612[@]})
         fi
-        if [ "$_patch" = "6.19" ]; then
-          _whitelist=(${_whitelist619[@]})
-        fi
         patchy=0
         if (( $(vercmp "$_kernel" "$_patch") >= 0 )); then
           for yup in "${_whitelist[@]}"; do
@@ -1259,7 +1255,7 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
 
           if [ "$patchy" = "1" ]; then
             msg2 "Applying $_p for $_kernel..."
-            patch -p1 --fuzz=3 -i "$srcdir"/$_p
+            patch -p1 -i "$srcdir"/$_p
           else
             msg2 "Skipping $_p as it doesn't apply to this driver version..."
           fi
@@ -1742,20 +1738,11 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
       fi
 
       # 6.19
-      if [ "$_kernel619" = "1" ]; then
-        patchy=0
-        for yup in "${_whitelist619[@]}"; do
-          [[ $pkgver = $yup ]] && patchy=1
-        done
-        if [ "$patchy" = "1" ]; then
+      if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
+        if [[ $pkgver = 470* ]]; then
           cd "$srcdir"/"$_pkg"/kernel-dkms
-          if (( ${pkgver%%.*} == 470 )); then
-            msg2 "Applying kernel-6.19-470.patch for dkms..."
-            patch -Np1 --fuzz=3 -i "$srcdir"/kernel-6.19-470.patch
-          fi
-          cd "$srcdir"
-        else
-          msg2 "Skipping kernel-6.19 patches as they don't apply to this driver version..."
+          msg2 "Applying kernel-6.19-470.patch for $_kernel..."
+          patch -Np1 --fuzz=3 -i "$srcdir"/kernel-6.19-470.patch
         fi
       fi
 
