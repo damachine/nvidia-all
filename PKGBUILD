@@ -1788,7 +1788,7 @@ build() {
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
     if command -v ld.lld &> /dev/null; then
-      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1 SYSSRC="${_linuxsrc}"
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 SYSSRC="${_linuxsrc}"
     else
       CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
     fi
