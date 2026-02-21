@@ -796,7 +796,7 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
     # Loop kernels (4.15.0-1-ARCH, 4.14.5-1-ck, ...)
     local -a _kernels
     if [ -n "$_kerneloverride" ]; then
-      _kernels="$_kerneloverride"
+      _kernels=("$_kerneloverride")
     else
       mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
     fi
@@ -1787,8 +1787,11 @@ build() {
       warning "Found linux src in: ${_linuxsrc}"
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
-    CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
-    #CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LD=ld.lld SYSSRC="${_linuxsrc}"
+    if command -v ld.lld &> /dev/null; then
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1 SYSSRC="${_linuxsrc}"
+    else
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
+    fi
   fi
 }
 
@@ -2405,10 +2408,21 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
       provides=('NVIDIA-MODULE')
 
       cd ${_srcbase}-${pkgver}
-      _extradir="/usr/lib/modules/$(</usr/src/linux/version)/extramodules"
-      #_extradir="/usr/lib/modules/$(</proc/sys/kernel/osrelease)/extramodules"
-      install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
-      find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
+
+      # Build for all kernels
+      local _kernel
+      local -a _kernels
+      mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
+      for _kernel in "${_kernels[@]}"; do
+        _extradir="/usr/lib/modules/${_kernel}/extramodules"
+        install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
+      done
+
+      if command -v llvm-strip &> /dev/null; then
+        find "${pkgdir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
+      else
+        find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
+      fi
       find "${pkgdir}" -name '*.ko' -exec xz {} +
 
       # Force module to load even on unsupported GPUs
