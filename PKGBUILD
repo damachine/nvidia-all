@@ -1788,10 +1788,8 @@ build() {
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
     if command -v ld.lld &> /dev/null; then
-      msg2 "Using LLVM linker (ld.lld)"
-        CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LD=ld.lld SYSSRC="${_linuxsrc}"
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1 SYSSRC="${_linuxsrc}"
     else
-      msg2 "Using default linker (ld.lld not found)"
       CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
     fi
   fi
@@ -2410,8 +2408,16 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
       provides=('NVIDIA-MODULE')
 
       cd ${_srcbase}-${pkgver}
-      _extradir="/usr/lib/modules/$(uname -r)/extramodules"
-      install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
+
+      # Build for all kernels
+      local _kernel
+      local -a _kernels
+      mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
+      for _kernel in "${_kernels[@]}"; do
+        _extradir="/usr/lib/modules/${_kernel}/extramodules"
+        install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
+      done
+
       if command -v llvm-strip &> /dev/null; then
         find "${pkgdir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
       else
