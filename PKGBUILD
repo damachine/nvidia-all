@@ -1787,7 +1787,7 @@ build() {
       warning "Found linux src in: ${_linuxsrc}"
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
-    if command -v ld.lld &> /dev/null; then
+    if grep -q "CONFIG_CC_IS_CLANG=y" "${_linuxsrc}/.config" 2>/dev/null || grep -q "CONFIG_CC_IS_CLANG=y" "${_linuxsrc}/include/config/auto.conf" 2>/dev/null; then
       CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1 SYSSRC="${_linuxsrc}"
     else
       CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
@@ -2313,7 +2313,7 @@ nvidia-utils-tkg() {
         msg2 "Applying advanced NVIDIA module parameters..."
         install -Dm644 "${srcdir}/nvidia-modprobe.conf" "${pkgdir}/usr/lib/modprobe.d/${pkgname}-modprobe.conf"
       fi
-      
+
       if [[ "${_modprobe_mobile}" == "true" ]]; then
         msg2 "Applying advanced NVIDIA module parameters for mobile devices..."
         install -Dm644 "${srcdir}/nvidia-modprobe-mobile.conf" "${pkgdir}/usr/lib/modprobe.d/${pkgname}-modprobe.conf"
@@ -2418,7 +2418,7 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
         install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
       done
 
-      if command -v llvm-strip &> /dev/null; then
+      if grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/${_kernel}/build/.config" 2>/dev/null || grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/${_kernel}/build/include/config/auto.conf" 2>/dev/null; then
         find "${pkgdir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
       else
         find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
