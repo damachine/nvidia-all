@@ -1787,8 +1787,13 @@ build() {
       warning "Found linux src in: ${_linuxsrc}"
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
-    if grep -q "CONFIG_CC_IS_CLANG=y" "${_linuxsrc}/.config" 2>/dev/null || grep -q "CONFIG_CC_IS_CLANG=y" "${_linuxsrc}/include/config/auto.conf" 2>/dev/null; then
-      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1 SYSSRC="${_linuxsrc}"
+    _cfg="${_linuxsrc}/.config"
+    [[ ! -f "$_cfg" ]] && _cfg="${_linuxsrc}/include/config/auto.conf"
+    if grep -q "CONFIG_CC_IS_CLANG=y" "$_cfg" 2>/dev/null && \
+       command -v clang &>/dev/null && command -v ld.lld &>/dev/null; then
+      _llvm_ias=""
+      grep -q "CONFIG_AS_IS_LLVM=y" "$_cfg" 2>/dev/null && _llvm_ias="LLVM_IAS=1"
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 ${_llvm_ias} SYSSRC="${_linuxsrc}"
     else
       CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
     fi
@@ -2418,8 +2423,9 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
         install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
       done
 
-      if grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/${_kernel}/build/.config" 2>/dev/null || grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/${_kernel}/build/include/config/auto.conf" 2>/dev/null; then
-        find "${pkgdir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
+      if { grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/${_kernel}/build/.config" 2>/dev/null || grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/${_kernel}/build/include/config/auto.conf" 2>/dev/null; } && \
+        command -v llvm-strip &>/dev/null; then
+          find "${pkgdir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
       else
         find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
       fi
