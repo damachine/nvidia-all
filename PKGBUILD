@@ -1791,8 +1791,16 @@ build() {
       warning "Found linux src in: ${_linuxsrc}"
     done
     warning "Using linux src from: ${_linuxsrc} (last one listed)"
-    CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
-    #CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) LD=ld.lld SYSSRC="${_linuxsrc}"
+    _cfg="${_linuxsrc}/.config"
+    [[ ! -f "$_cfg" ]] && _cfg="${_linuxsrc}/include/config/auto.conf"
+    if grep -q "CONFIG_CC_IS_CLANG=y" "$_cfg" 2>/dev/null && \
+       command -v clang &>/dev/null && command -v ld.lld &>/dev/null; then
+      _llvm_ias=""
+      grep -q "CONFIG_AS_IS_LLVM=y" "$_cfg" 2>/dev/null && _llvm_ias="LLVM_IAS=1"
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 ${_llvm_ias} SYSSRC="${_linuxsrc}"
+    else
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) SYSSRC="${_linuxsrc}"
+    fi
   fi
 }
 
@@ -2334,7 +2342,7 @@ nvidia-utils-tkg() {
         msg2 "Applying advanced NVIDIA module parameters..."
         install -Dm644 "${srcdir}/nvidia-modprobe.conf" "${pkgdir}/usr/lib/modprobe.d/${pkgname}-modprobe.conf"
       fi
-      
+
       if [[ "${_modprobe_mobile}" == "true" ]]; then
         msg2 "Applying advanced NVIDIA module parameters for mobile devices..."
         install -Dm644 "${srcdir}/nvidia-modprobe-mobile.conf" "${pkgdir}/usr/lib/modprobe.d/${pkgname}-modprobe.conf"
@@ -2429,10 +2437,22 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
       provides=('NVIDIA-MODULE')
 
       cd ${_srcbase}-${pkgver}
-      _extradir="/usr/lib/modules/$(</usr/src/linux/version)/extramodules"
-      #_extradir="/usr/lib/modules/$(</proc/sys/kernel/osrelease)/extramodules"
-      install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
-      find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
+
+      # Build for all kernels
+      local _kernel
+      local -a _kernels
+      mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
+      for _kernel in "${_kernels[@]}"; do
+        _extradir="/usr/lib/modules/${_kernel}/extramodules"
+        install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
+      done
+
+      if { grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/${_kernel}/build/.config" 2>/dev/null || grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/${_kernel}/build/include/config/auto.conf" 2>/dev/null; } && \
+        command -v llvm-strip &>/dev/null; then
+          find "${pkgdir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
+      else
+        find "${pkgdir}" -name '*.ko' -exec strip --strip-debug {} +
+      fi
       find "${pkgdir}" -name '*.ko' -exec xz {} +
 
       # Force module to load even on unsupported GPUs
