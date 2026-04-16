@@ -34,30 +34,6 @@ if [ -e "$_EXT_CONFIG_PATH" ]; then
   source "$_EXT_CONFIG_PATH" && msg2 "External configuration file '$_EXT_CONFIG_PATH' will be used to override customization.cfg values." && plain ""
 fi
 
-# Resolve _target_kernel (package name, e.g. "linux-rc-tkg") to kernel version string for non-DKMS builds
-# Only effective when _dkms is "false" or "full"
-if [ -n "$_target_kernel" ] && { [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; }; then
-  _resolved_kernel=""
-  for _mod_dir in /usr/lib/modules/*/; do
-    _pkgbase_file="${_mod_dir}pkgbase"
-    if [ -f "$_pkgbase_file" ] && [ "$(cat "$_pkgbase_file")" = "$_target_kernel" ]; then
-      _ver_file="${_mod_dir}build/version"
-      [ -f "$_ver_file" ] || _ver_file="${_mod_dir}extramodules/version"
-      if [ -f "$_ver_file" ]; then
-        _resolved_kernel="$(cat "$_ver_file")"
-        break
-      fi
-    fi
-  done
-  if [ -n "$_resolved_kernel" ]; then
-    _kerneloverride="$_resolved_kernel"
-    msg2 "_target_kernel '$_target_kernel' resolved to kernel version: $_kerneloverride"
-  else
-    error "_target_kernel: Could not find installed kernel for package '$_target_kernel'. Is it installed with its headers?"
-    exit 1
-  fi
-fi
-
 # Auto-add kernel userpatches to source
 _autoaddpatch="false"
 
@@ -78,16 +54,16 @@ if [ -z "$_driver_version" ] || [ "$_driver_version" = "latest" ] || [ -z "$_dri
   warning "Please make sure you have the corresponding kernel headers package installed for each kernel on your system !\n"
 
   if [[ -z $CONDITION ]]; then
-    read -p "    Which driver version do you want?`echo $'\n    > 1.Vulkan dev: 580.94.16\n      2.590 series: 590.48.01\n      3.580 series: 580.126.09\n      4.570 series: 570.211.01\n      5.470 series: 470.256.02 (LTS kernel recommended)\n      6.Older series\n      7.Custom version (396.xx series or higher)\n    choice[1-7?]: '`" CONDITION;
+    read -p "    Which driver version do you want?`echo $'\n    > 1.Vulkan dev: 595.44.05\n      2.595 series: 595.58.03\n      3.580 series: 580.142\n      4.570 series: 570.211.01\n      5.470 series: 470.256.02 (LTS kernel recommended)\n      6.Older series\n      7.Custom version (396.xx series or higher)\n    choice[1-7?]: '`" CONDITION;
   fi
     # This will be treated as the latest regular driver.
     if [ "$CONDITION" = "2" ]; then
-      echo '_driver_version=590.48.01' > options
-      echo '_md5sum=7644d59c537041a5bbaa2212ac6619df' >> options
+      echo '_driver_version=595.58.03' > options
+      echo '_md5sum=8d98a183bf994af0ff19980e0ef430f2' >> options
       echo '_driver_branch=regular' >> options
     elif [ "$CONDITION" = "3" ]; then
-      echo '_driver_version=580.126.09' > options
-      echo '_md5sum=19f6d0af99fc3042ed20fa0639a70f45' >> options
+      echo '_driver_version=580.142' > options
+      echo '_md5sum=30a8bebe011ab3d9ff5d42a1279d4f61' >> options
       echo '_driver_branch=regular' >> options
     elif [ "$CONDITION" = "4" ]; then
       echo '_driver_version=570.211.01' > options
@@ -98,102 +74,106 @@ if [ -z "$_driver_version" ] || [ "$_driver_version" = "latest" ] || [ -z "$_dri
       echo '_md5sum=57f54d5f6ddef5417215645aabbf9b9c' >> options
       echo '_driver_branch=regular' >> options
     elif [ "$CONDITION" = "6" ]; then
-      read -p "    Which legacy driver version do you want?`echo $'\n    > 1.575 series: 575.64.05\n      2.565 series: 565.77\n      3.560 series: 560.35.03\n      4.555 series: 555.58.02\n      5.550 series: 550.135\n      6.545 series: 545.29.06\n      7.535 series: 535.288.01\n      8.530 series: 530.41.03\n      9.525 series: 525.147.05\n      10.520 series: 520.56.06\n      11.515 series: 515.86.01\n      12.510 series: 510.85.02\n      13.495 series: 495.46\n      14.465 series: 465.31\n      15.460 series: 460.91.03\n      16.455 series: 455.45.01\n      17.450 series: 450.119.03\n      18.440 series: 440.100 (kernel 5.8 or lower)\n      19.435 series: 435.21  (kernel 5.6 or lower)\n      20.430 series: 430.64  (kernel 5.5 or lower)\n      21.418 series: 418.113 (kernel 5.5 or lower)\n      22.415 series: 415.27  (kernel 5.4 or lower)\n      23.410 series: 410.104 (kernel 5.5 or lower)\n      24.396 series: 396.54  (kernel 5.3 or lower, 5.1 or lower recommended)\n    choice[1-24?]: '`" CONDITION;
+      read -p "    Which legacy driver version do you want?`echo $'\n    > 1.590 series: 590.48.01\n      2.575 series: 575.64.05\n      3.565 series: 565.77\n      4.560 series: 560.35.03\n      5.555 series: 555.58.02\n      6.550 series: 550.135\n      7.545 series: 545.29.06\n      8.535 series: 535.288.01\n      9.530 series: 530.41.03\n      10.525 series: 525.147.05\n      11.520 series: 520.56.06\n      12.515 series: 515.86.01\n      13.510 series: 510.85.02\n      14.495 series: 495.46\n      15.465 series: 465.31\n      16.460 series: 460.91.03\n      17.455 series: 455.45.01\n      18.450 series: 450.119.03\n      19.440 series: 440.100 (kernel 5.8 or lower)\n      20.435 series: 435.21  (kernel 5.6 or lower)\n      21.430 series: 430.64  (kernel 5.5 or lower)\n      22.418 series: 418.113 (kernel 5.5 or lower)\n      23.415 series: 415.27  (kernel 5.4 or lower)\n      24.410 series: 410.104 (kernel 5.5 or lower)\n      25.396 series: 396.54  (kernel 5.3 or lower, 5.1 or lower recommended)\n    choice[1-25?]: '`" CONDITION;
       if [ "$CONDITION" = "2" ]; then
+        echo '_driver_version=575.64.05' > options
+        echo '_md5sum=5232a442e7696c73f2a7f527481084aa' >> options
+        echo '_driver_branch=regular' >> options
+      elif [ "$CONDITION" = "3" ]; then
         echo '_driver_version=565.77' > options
         echo '_md5sum=48d9a5b5999d0f30ec8326c94b34945e' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "3" ]; then
+      elif [ "$CONDITION" = "4" ]; then
         echo '_driver_version=560.35.03' > options
         echo '_md5sum=d4f54004bb80da17b3e2fb21ac17c018' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "4" ]; then
+      elif [ "$CONDITION" = "5" ]; then
         echo '_driver_version=555.58.02' > options
         echo '_md5sum=f6efa3d40fccc97fbac9b55fc81e30d7' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "5" ]; then
+      elif [ "$CONDITION" = "6" ]; then
         echo '_driver_version=550.135' > options
         echo '_md5sum=a8c3ae0076f11e864745fac74bfdb01f' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "6" ]; then
+      elif [ "$CONDITION" = "7" ]; then
         echo '_driver_version=545.29.06' > options
         echo '_md5sum=406f748abf16db5d599b652c508b99fd' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "7" ]; then
+      elif [ "$CONDITION" = "8" ]; then
         echo '_driver_version=535.288.01' > options
         echo '_md5sum=8316bb6a4448981fc925abda85194197' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "8" ]; then
+      elif [ "$CONDITION" = "9" ]; then
         echo '_driver_version=530.41.03' > options
         echo '_md5sum=9049dbe01410eac1e05b249de10f6b91' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "9" ]; then
+      elif [ "$CONDITION" = "10" ]; then
         echo '_driver_version=525.147.05' > options
         echo '_md5sum=bf00562896e64ebf3f28e528947049ce' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "10" ]; then
+      elif [ "$CONDITION" = "11" ]; then
         echo '_driver_version=520.56.06' > options
         echo '_md5sum=18136ef051cbfc3850e88aa5184b31b8' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "11" ]; then
+      elif [ "$CONDITION" = "12" ]; then
         echo '_driver_version=515.86.01' > options
         echo '_md5sum=5eaf6786f0c92cfcecb1ab950ff70df5' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "12" ]; then
+      elif [ "$CONDITION" = "13" ]; then
         echo '_driver_version=510.85.02' > options
         echo '_md5sum=0367f772fc61bccecee8559c4fe9bb3d' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "13" ]; then
+      elif [ "$CONDITION" = "14" ]; then
         echo '_driver_version=495.46' > options
         echo '_md5sum=db1d6b0f9e590249bbf940a99825f000' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "14" ]; then
+      elif [ "$CONDITION" = "15" ]; then
         echo '_driver_version=465.31' > options
         echo '_md5sum=4996eefa54392b0c9541d22e88abab66' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "15" ]; then
+      elif [ "$CONDITION" = "16" ]; then
         echo '_driver_version=460.91.03' > options
         echo '_md5sum=15c5ada08bdb25d757d90e0f21b6f270' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "16" ]; then
+      elif [ "$CONDITION" = "17" ]; then
         echo '_driver_version=455.45.01' > options
         echo '_md5sum=f0161877350aa9155eada811ff2844a8' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "17" ]; then
+      elif [ "$CONDITION" = "18" ]; then
         echo '_driver_version=450.119.03' > options
         echo '_md5sum=b2725b8c15a364582be90c5fa1d6690f' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "18" ]; then
+      elif [ "$CONDITION" = "19" ]; then
         echo '_driver_version=440.100' > options
         echo '_md5sum=7b99bcd2807ecd37af60d29de7bc30c2' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "19" ]; then
+      elif [ "$CONDITION" = "20" ]; then
         echo '_driver_version=435.21' > options
         echo '_md5sum=050acb0aecc93ba15d1fc609ee82bebe' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "20" ]; then
+      elif [ "$CONDITION" = "21" ]; then
         echo '_driver_version=430.64' > options
         echo '_md5sum=a4ea35bf913616c71f104f15092df714' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "21" ]; then
+      elif [ "$CONDITION" = "22" ]; then
         echo '_driver_version=418.113' > options
         echo '_md5sum=0b21dbabaa25beed46c20a177e59642e' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "22" ]; then
+      elif [ "$CONDITION" = "23" ]; then
         echo '_driver_version=415.27' > options
         echo '_md5sum=f4777691c4673c808d82e37695367f6d' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "23" ]; then
+      elif [ "$CONDITION" = "24" ]; then
         echo '_driver_version=410.104' > options
         echo '_md5sum=4f3219b5fad99465dea399fc3f4bb866' >> options
         echo '_driver_branch=regular' >> options
-      elif [ "$CONDITION" = "24" ]; then
+      elif [ "$CONDITION" = "25" ]; then
         echo '_driver_version=396.54' > options
         echo '_md5sum=195afa93d400bdbb9361ede6cef95143' >> options
         echo '_driver_branch=regular' >> options
       else
-        echo '_driver_version=575.64.05' > options
-        echo '_md5sum=5232a442e7696c73f2a7f527481084aa' >> options
+        echo '_driver_version=590.48.01' > options
+        echo '_md5sum=7644d59c537041a5bbaa2212ac6619df' >> options
         echo '_driver_branch=regular' >> options
       fi
     elif [ "$CONDITION" = "7" ]; then
@@ -210,8 +190,8 @@ if [ -z "$_driver_version" ] || [ "$_driver_version" = "latest" ] || [ -z "$_dri
       echo "_driver_version=$_driver_version" >> options
     # This (condition 1) will be treated as the latest Vulkan developer driver.
     else
-      echo '_driver_version=580.94.16' > options
-      echo '_md5sum=4d7e17134129925579ffd72c1f11deac' >> options
+      echo '_driver_version=595.44.05' > options
+      echo '_md5sum=b4479cedbbbc4a8a5e69d57088cdaa24' >> options
       echo '_driver_branch=vulkandev' >> options
     fi
 # Package type selector
@@ -319,15 +299,13 @@ else
   __branchname="$_branchname"
 fi
 
-if [ "${_utils_only:-false}" != "true" ]; then
-  if [ "$_dkms" = "full" ]; then
-    _pkgname_array+=("$__branchname-dkms-tkg")
-    _pkgname_array+=("$__branchname-tkg")
-  elif [ "$_dkms" = "true" ]; then
-    _pkgname_array+=("$__branchname-dkms-tkg")
-  else
-    _pkgname_array+=("$__branchname-tkg")
-  fi
+if [ "$_dkms" = "full" ]; then
+  _pkgname_array+=("$__branchname-dkms-tkg")
+  _pkgname_array+=("$__branchname-tkg")
+elif [ "$_dkms" = "true" ]; then
+  _pkgname_array+=("$__branchname-dkms-tkg")
+else
+  _pkgname_array+=("$__branchname-tkg")
 fi
 
 _pkgname_array+=("$_branchname-utils-tkg")
@@ -347,6 +325,21 @@ if [ "$_nvsettings" = "true" ]; then
   _pkgname_array+=("$_branchname-settings-tkg")
 fi
 
+if [ "$_libxnvctrl" = "true" ]; then
+  if [ "$_driver_branch" = "vulkandev" ]; then
+    warning "libxnvctrl-tkg: vulkandev tag unavailable."
+    warning "Falling back to external 'libxnvctrl'; replacing an installed TKG provider may require manual 'pacman -S libxnvctrl'."
+    _libxnvctrl="external"
+  else
+    if [ "$_nvsettings" != "true" ]; then
+      warning "_libxnvctrl requires _nvsettings=true. Enabling nvidia-settings automatically."
+      _nvsettings="true"
+      _pkgname_array+=("$_branchname-settings-tkg")
+    fi
+    _pkgname_array+=("$_branchname-libxnvctrl-tkg")
+  fi
+fi
+
 if [ "$_eglwayland" = "true" ]; then
   _pkgname_array+=("$_branchname-egl-wayland-tkg")
 fi
@@ -357,12 +350,22 @@ fi
 
 pkgname=("${_pkgname_array[@]}")
 pkgver=$_driver_version
-pkgrel=264
+pkgrel=266
 arch=('x86_64')
 url="http://www.nvidia.com/"
 license=('custom:NVIDIA')
-optdepends=('linux-headers' 'linux-lts-headers: Build the module for LTS Arch kernel')
-options=(!strip !lto !buildflags)
+makedepends=('linux-headers' 'patchelf')
+if [ "$_nvsettings" = "true" ]; then
+  makedepends+=('jansson' 'gtk3' 'libxv' 'libvdpau' 'libxext' 'vulkan-headers')
+fi
+optdepends=('linux-lts-headers: Build the module for LTS Arch kernel'
+            'clang: Required when kernel was built with Clang'
+            'llvm: Required when kernel was built with Clang (llvm-strip)'
+            'lld: Required when kernel was built with Clang (ld.lld)')
+options=('!strip' '!buildflags')
+if (( ${pkgver%%.*} < 580 )); then
+  options+=('!lto')
+fi
 
 cp "$where"/patches/* "$where" && cp -r "$where"/system/* "$where"
 
@@ -383,6 +386,8 @@ else
 fi
 
 source=($_source_name
+        'systemd-homed-override.conf'
+        'systemd-suspend-override.conf'
         '10-nvidia-drm-outputclass.conf'
         'nvidia-utils-tkg.sysusers'
         '60-nvidia.rules'
@@ -448,81 +453,100 @@ source=($_source_name
         'cuda-no-stable-perf-limit'
         '50-nvidia-cuda-disable-perf-boost.conf'
         'kernel-6.19.patch'
+        'kernel-6.19-470.patch'
+        'kernel-7.0-580.patch'
+        'kernel-7.0.patch'
         '0001-Enable-atomic-kernel-modesetting-by-default.diff'
         '0002-Add-IBT-support.diff'
-        'nvidia-patch.sh')
+        'nvidia-patch.sh'
+        'nvidia-modprobe.conf'
+        'nvidia-modprobe-mobile.conf'
+        'nvidia-bsb-dsc-fix.diff'
+        'nvidia-settings-libxnvctrl_so.diff'
+        'fix-hw-cursor-kde.diff'
+)
 
 msg2 "Selected driver integrity check behavior (md5sum or SKIP): $_md5sum" # If the driver is "known", return md5sum. If it isn't, return SKIP
 
 md5sums=("$_md5sum"
-         'cb27b0f4a78af78aa96c5aacae23256c'
-         'ddd9f92c121ff64846b27bcee2513cb4'
-         '552087b81ab385edf016adac0b33db7a'
-         '596f7cbf2db48d4f5b1c38967bb93cea'
-         'b4266d215fb224488eeca12359c563f8'
-         '9b1543768ea75320fd0d2315de66d1c8'
-         'afb98b1dab0c61df526d4c0ee4d18abf'
-         'e5d1574892eb68de9af1b79a6bfb5e7b'
-         '7a825f41ada7e106c8c0b713a49b3bfa'
-         'd961d1dce403c15743eecfe3201e4b6a'
-         '14460615a9d4e247c8d9bcae8776ed48'
-         '401859ea7bb4a9864af24ecd67abf34c'
-         'adb83cede754daf5adb001f077b1ff67'
-         '58d058367934813d29d38328bc3b4dcd'
-         '6cff80c311debfdb6b543e575a81820a'
-         'a3ce8ebab6506f556f4b222e2372ce87'
-         '98b67a671ece0a796f9767793c209c93'
-         '6f9a62ef76ac86f299b0174f44488987'
-         '8bf41d705afdf9aad7d934be06a7b12b'
-         '0d9aa49647cc73a4522246cc22ae15e1'
-         'e6270c2d19afd982efc92bdecd9f48f0'
-         '1c1966d6ee6f3cd381ebcc92f1488c68'
-         'c44e43638e1ab708fbdd6d7aa76afcf2'
-         '84dc2d2eff2846b2f961388b153e2a89'
-         '1f11f5c765e42c471b202e630e3cd407'
-         'd911a0531c6f270926cacabd1dd80f02'
-         '589dfc0c801605018b7ccd690f06141a'
-         'd67bf0a9aa5c19f07edbaf6bd157d661'
-         '888d12b9aea711e6a025835b8ad063e2'
-         '0758046ed7c50463fd0ec378e9e34f95'
-         'bcdd512edad1bad8331a8872259d2581'
-         'fd0d6e14e675a61f32279558678cfc36'
-         '8764cc714e61363cc8f818315957ad17'
-         '08bec554de265ce5fdcfdbd55fb608fc'
-         '3980770412a1d4d7bd3a16c9042200df'
-         'f5fd091893f513d2371654e83049f099'
-         'd684ca11fdc9894c14ead69cb35a5946'
-         '0f987607c98eb6faeb7d691213de6a70'
-         'a70bc9cbbc7e8563b48985864a11de71'
-         '31128900574dec9ebdb753db50ef4f16'
-         '0b9b855d9be313153a5903e46e774a30'
-         '5d573b1aa0712b9bd2000c9fefdf84c2'
-         'a6acbba08173769399658914eb86a212'
-         'f0173a8bce0124b2d62a54f2e22d1552'
-         '4f855bb0e0b84e8e5d072c687256767a'
-         '50d3eac54d14d44d70df92770a3a9abf'
-         'b81cac7573842ebd7af30fdf851c63f9'
-         'd11cb3bd76ab61a0f086aea9a0c53087'
-         'f7f95287eb18be63bfad0427f13b6d43'
-         '7481cb7f52b76c426d579b115e4c84b6'
-         'c06a9359969ba331bc9fac91fe0eeff2'
-         'c691df97015eee42d51b34b147dd5236'
-         'adfcf56ea4a4a420d9ef07b9d4b451dc'
-         '2b5b62c1265b3b6b18022a0a716e5fcd'
-         '676d7039ff5b5e2bdd03db08fd1cba4e'
-         '0e54e7d932e520c403181e3348d4d42b'
-         '6904323d3a4ad04a708c927e930efc34'
-         '42a482aa44953061cbbf9a495fcad926'
-         '7143f20dbb3333ea6304540b5318bacb'
-         '6c26d0df1e30c8bedf6abfe99e842944'
-         'c39df46bb99047ca7d09f9122a7370a8'
-         '411b490057cdd9e046ca6ea3d39b81bd' # limit-vram-usage
-         '17c48c8ec5c19fd9582dedb9f0ad3ca2' # cuda-no-stable-perf-limit
-         'f6d0a9b1e503d0e8c026a20b61f889c2'
-         '0c0b692368eef7a511f22adddc23d8a2'
-         '24bd1c8e7b9265020969a8da2962e114'
-         '84ca49afabf4907f19c81e0bb56b5873'
-         'c3a3622be834839f3b1c1dc0dfe4c859' # nvidia-patch.sh
+        'aff0d6eed7b21d5ce61d57231b3b8e6e'
+        'fa85b6c0011dfc99c98a56355602c78f'
+        'cb27b0f4a78af78aa96c5aacae23256c'
+        'ddd9f92c121ff64846b27bcee2513cb4'
+        '552087b81ab385edf016adac0b33db7a'
+        '596f7cbf2db48d4f5b1c38967bb93cea'
+        'b4266d215fb224488eeca12359c563f8'
+        '9b1543768ea75320fd0d2315de66d1c8'
+        'afb98b1dab0c61df526d4c0ee4d18abf'
+        'e5d1574892eb68de9af1b79a6bfb5e7b'
+        '7a825f41ada7e106c8c0b713a49b3bfa'
+        'd961d1dce403c15743eecfe3201e4b6a'
+        '14460615a9d4e247c8d9bcae8776ed48'
+        '401859ea7bb4a9864af24ecd67abf34c'
+        'adb83cede754daf5adb001f077b1ff67'
+        '58d058367934813d29d38328bc3b4dcd'
+        '6cff80c311debfdb6b543e575a81820a'
+        'a3ce8ebab6506f556f4b222e2372ce87'
+        '98b67a671ece0a796f9767793c209c93'
+        '6f9a62ef76ac86f299b0174f44488987'
+        '8bf41d705afdf9aad7d934be06a7b12b'
+        '0d9aa49647cc73a4522246cc22ae15e1'
+        'e6270c2d19afd982efc92bdecd9f48f0'
+        '1c1966d6ee6f3cd381ebcc92f1488c68'
+        'c44e43638e1ab708fbdd6d7aa76afcf2'
+        '84dc2d2eff2846b2f961388b153e2a89'
+        '1f11f5c765e42c471b202e630e3cd407'
+        'd911a0531c6f270926cacabd1dd80f02'
+        '589dfc0c801605018b7ccd690f06141a'
+        'd67bf0a9aa5c19f07edbaf6bd157d661'
+        '888d12b9aea711e6a025835b8ad063e2'
+        '0758046ed7c50463fd0ec378e9e34f95'
+        'bcdd512edad1bad8331a8872259d2581'
+        'fd0d6e14e675a61f32279558678cfc36'
+        '8764cc714e61363cc8f818315957ad17'
+        '08bec554de265ce5fdcfdbd55fb608fc'
+        '3980770412a1d4d7bd3a16c9042200df'
+        'f5fd091893f513d2371654e83049f099'
+        'd684ca11fdc9894c14ead69cb35a5946'
+        '0f987607c98eb6faeb7d691213de6a70'
+        'a70bc9cbbc7e8563b48985864a11de71'
+        '31128900574dec9ebdb753db50ef4f16'
+        '0b9b855d9be313153a5903e46e774a30'
+        '5d573b1aa0712b9bd2000c9fefdf84c2'
+        'a6acbba08173769399658914eb86a212'
+        'f0173a8bce0124b2d62a54f2e22d1552'
+        '4f855bb0e0b84e8e5d072c687256767a'
+        '50d3eac54d14d44d70df92770a3a9abf'
+        'b81cac7573842ebd7af30fdf851c63f9'
+        'd11cb3bd76ab61a0f086aea9a0c53087'
+        'f7f95287eb18be63bfad0427f13b6d43'
+        '7481cb7f52b76c426d579b115e4c84b6'
+        'c06a9359969ba331bc9fac91fe0eeff2'
+        'c691df97015eee42d51b34b147dd5236'
+        'adfcf56ea4a4a420d9ef07b9d4b451dc'
+        '2b5b62c1265b3b6b18022a0a716e5fcd'
+        '676d7039ff5b5e2bdd03db08fd1cba4e'
+        '0e54e7d932e520c403181e3348d4d42b'
+        '6904323d3a4ad04a708c927e930efc34'
+        '42a482aa44953061cbbf9a495fcad926'
+        '7143f20dbb3333ea6304540b5318bacb'
+        '6c26d0df1e30c8bedf6abfe99e842944'
+        'c39df46bb99047ca7d09f9122a7370a8'
+        '411b490057cdd9e046ca6ea3d39b81bd' # limit-vram-usage
+        'f7ec305af36bed8054668a7f3b5b82c3' # cuda-no-stable-perf-limit
+        'f6d0a9b1e503d0e8c026a20b61f889c2'
+        '0c0b692368eef7a511f22adddc23d8a2'
+        '33d4a80f467ce96cd98b1d79aad720a5'
+        'ff72e6704d61ac2c85254e60780de2fc' # kernel-7.0-580.patch
+        '5f3f509f22e574393baf424aefa5ad83' # kernel-7.0.patch
+        '24bd1c8e7b9265020969a8da2962e114'
+        '84ca49afabf4907f19c81e0bb56b5873'
+        '68d5cb25248f1c95200d72010d6ee488' # nvidia-patch.sh
+        '1d27b1fa3bdf36fced428a90b61e63dc' # nvidia-modprobe.conf
+        '47d55754a2ccb7e4b5cdbbc943a0a17b' # nvidia-modprobe-mobile.conf
+        'c488acde6cf5bfed42ee969f28b379dc' # nvidia-bsb-dsc-fix.patch
+        '12ce769d5212fd1bd87d54bf52ad39c7' # nvidia-settings-libxnvctrl_so.diff
+        'dcf3b66d1064c6c7f4598684a1d2368d' # fix-hw-cursor-kde.diff
 )
 
 if [ "$_open_source_modules" = "true" ]; then
@@ -532,6 +556,11 @@ if [ "$_open_source_modules" = "true" ]; then
     source+=("$pkgname-$pkgver.tar.gz::https://github.com/NVIDIA/open-gpu-kernel-modules/archive/refs/tags/${pkgver}.tar.gz")
   fi
   md5sums+=("SKIP")
+fi
+
+if [ "$_libxnvctrl" = "true" ]; then
+  source+=("nvidia-settings-$pkgver.tar.gz::https://github.com/NVIDIA/nvidia-settings/archive/refs/tags/${pkgver}.tar.gz")
+  md5sums+=('SKIP')
 fi
 
 if [ "$_autoaddpatch" = "true" ]; then
@@ -606,33 +635,6 @@ prepare() {
     fi
   fi
 
-  # BSB DSC fix user acknowledgement
-  if [[ "${_bsb_dsc_fix:-false}" == "true" ]]; then
-    warning "========================================================================"
-    warning "BSB DSC FIX PATCH ENABLED"
-    warning ""
-    warning "You have enabled an UNOFFICIAL, THIRD-PARTY community patch:"
-    warning "  https://github.com/triple-groove/nvidia-bsb-dsc-fix"
-    warning ""
-    warning "This patch fixes DSC 'rainbow static' artifacts for the"
-    warning "Bigscreen Beyond VR headset (open GPU kernel modules only, >= 580)."
-    warning ""
-    warning "!! NO WARRANTY - Use at your own risk !!"
-    warning "!! Ensure you have a recovery method (TTY, live USB) in case of"
-    warning "!! boot failure before continuing."
-    warning ""
-    warning "Please confirm you have read the full patch details at:"
-    warning "  https://github.com/triple-groove/nvidia-bsb-dsc-fix"
-    warning "========================================================================"
-    plain ""
-    read -p "    I have read the patch details and accept the risks. Continue? [y/N] " _bsb_ack
-    if [[ ! "$_bsb_ack" =~ [yY] ]]; then
-      error "Aborted by user. Set _bsb_dsc_fix=\"false\" in customization.cfg to disable this prompt."
-      exit 1
-    fi
-    plain ""
-  fi
-
   if [ "$_gcc14_fix" = "true" ] && [[ "$(gcc -dumpversion)" = 14* ]]; then
     _gcc14="true"
     msg2 "GCC 14 detected"
@@ -644,6 +646,12 @@ prepare() {
   # Extract
   msg2 "Self-Extracting $_pkg.run..."
   sh "$_pkg".run -x
+
+  if [ "$_libxnvctrl" = "true" ]; then
+    cd "$srcdir/nvidia-settings-$pkgver"
+    patch -Np1 -i "$srcdir/nvidia-settings-libxnvctrl_so.diff"
+    cd "$srcdir"
+  fi
 
   if [ "$_open_source_modules" = "true" ]; then
     cd ${_srcbase}-${pkgver}
@@ -696,16 +704,36 @@ prepare() {
     #
     # TODO 580+ patches
     #
-    if (( ${pkgver%%.*} >= 580 )); then
+    if (( ${pkgver%%.*} >= 580 )) && (( ${pkgver%%.*} < 595 )); then
       msg2 "Applying 0001-Enable-atomic-kernel-modesetting-by-default.diff to kernel-open ${pkgver}..."
       patch -Np1 -i "${srcdir}/0001-Enable-atomic-kernel-modesetting-by-default.diff" -d "${srcdir}/${_srcbase}-${pkgver}/kernel-open"
+    fi
 
+    if (( ${pkgver%%.*} >= 580 )); then
       msg2 "Applying 0002-Add-IBT-support.diff to kernel-open ${pkgver}..."
       patch -Np1 -i "${srcdir}/0002-Add-IBT-support.diff" -d "${srcdir}/${_srcbase}-${pkgver}"
     fi
 
+    if (( ${pkgver%%.*} == 580 )); then
+      msg2 "Applying fix-hw-cursor-kde.diff to kernel-open ${pkgver}..."
+      patch -Np1 -i "${srcdir}/fix-hw-cursor-kde.diff" -d "${srcdir}/${_srcbase}-${pkgver}/kernel-open"
+    fi
+
+    # BSB DSC fix - fixes Display Stream Compression "rainbow static" artifacts on the Bigscreen Beyond VR headset
+    # https://github.com/triple-groove/nvidia-bsb-dsc-fix
+    if [[ "${_bsb_dsc_fix:-false}" == "true" ]]; then
+      if (( ${pkgver%%.*} >= 580 )); then
+        msg2 "Applying nvidia-bsb-dsc-fix.diff to kernel-open ${pkgver}..."
+        patch -Np1 -i "${srcdir}/nvidia-bsb-dsc-fix.diff" -d "${srcdir}/${_srcbase}-${pkgver}"
+      else
+        warning "BSB DSC fix requires driver version >= 580 (current: ${pkgver}), skipping..."
+      fi
+    fi
+
     # 6.19 whitelist definition
     _open_whitelist619=( 590* )
+    # 7.0 whitelist definition
+    _open_whitelist70=( 580* 590* 595* )
     # Add future kernel version whitelists here following the same pattern
 
     local -a _kernels
@@ -715,10 +743,19 @@ prepare() {
       mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
     fi
 
+    if [ ${#_kernels[@]} -eq 0 ]; then
+      error "Could not detect kernel version. Set _kerneloverride in customization.cfg."
+      return 1
+    fi
+
     for _kernel in "${_kernels[@]}"; do
       # 6.19
       if (( $(vercmp "${_kernel}" "6.19") >= 0 )); then
         _open_kernel619="1"
+      fi
+      # 7.0
+      if (( $(vercmp "${_kernel}" "7.0") >= 0 )); then
+        _open_kernel70="1"
       fi
       # Add future kernel version checks here following the same pattern
     done
@@ -735,6 +772,29 @@ prepare() {
           ( cd "${srcdir}/${_srcbase}-${pkgver}/kernel-open" && patch -Np2 -i "${srcdir}/kernel-6.19.patch" )
         else
           msg2 "Skipping kernel-6.19.patch as it doesn't apply to driver version ${pkgver}..."
+        fi
+      fi
+    fi
+    # 7.0
+    if [ "${_open_kernel70}" = "1" ]; then
+      patchy=0
+      for yup in "${_open_whitelist70[@]}"; do
+        [[ ${pkgver} = ${yup} ]] && patchy=1
+      done
+      if (( ${pkgver%%.*} >= 590 )); then
+        if [ "${patchy}" = "1" ]; then
+          msg2 "Applying kernel-7.0.patch to kernel-open..."
+          ( cd "${srcdir}/${_srcbase}-${pkgver}/kernel-open" && patch -Np2 -i "${srcdir}/kernel-7.0.patch" )
+        else
+          msg2 "Skipping kernel-7.0.patch as it doesn't apply to driver version ${pkgver}..."
+        fi
+      fi
+      if (( ${pkgver%%.*} == 580 )); then
+        if [ "${patchy}" = "1" ]; then
+          msg2 "Applying kernel-7.0-580.patch to kernel-open..."
+          ( cd "${srcdir}/${_srcbase}-${pkgver}/kernel-open" && patch -Np1 -i "${srcdir}/kernel-7.0-580.patch" )
+        else
+          msg2 "Skipping kernel-7.0-580.patch as it doesn't apply to driver version ${pkgver}..."
         fi
       fi
     fi
@@ -776,6 +836,8 @@ DEST_MODULE_LOCATION[4]="/kernel/drivers/video"' kernel-open/dkms.conf
 
     cd "$srcdir/$_pkg"
     bsdtar -xf nvidia-persistenced-init.tar.bz2
+
+  # ! here we start the non-open source module preparation for the regular nvidia driver (dkms) module build
   else
     cd "$_pkg"
 
@@ -849,6 +911,12 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
     else
       mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
     fi
+
+    if [ ${#_kernels[@]} -eq 0 ]; then
+      error "Could not detect kernel version. Set _kerneloverride in customization.cfg."
+      return 1
+    fi
+
     for _kernel in "${_kernels[@]}"; do
       # Use separate source directories
       cp -r kernel kernel-"$_kernel"
@@ -1170,6 +1238,22 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         _whitelist612=( 565.57* )
       fi
 
+      # 6.19
+      if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
+        _whitelist619=( 590* )
+      fi
+
+      # 7.0
+      if (( $(vercmp "$_kernel" "7.0") >= 0 )); then
+        _whitelist70=( 590* 595* )
+        if (( ${pkgver%%.*} == 580 )); then
+          cd "$srcdir"/"$_pkg"/kernel-$_kernel
+          msg2 "Applying kernel-7.0-580.patch for $_kernel..."
+          patch -Np1 -i "${srcdir}/kernel-7.0-580.patch"
+          cd ..
+        fi
+      fi
+
       if [ "$_gcc14" = "true" ]; then
         cd "$srcdir"/"$_pkg"/kernel-$_kernel
         msg2 "Applying gcc-14 patch..."
@@ -1188,10 +1272,16 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         cd ..
       fi
 
-      # Loop patches (linux-4.15.patch, lol.patch, ...)
-      for _p in $(printf -- '%s\n' ${source[@]} | grep '\.patch$'); do  # https://stackoverflow.com/a/21058239/1821548
+      # Loop patches (kernel-X.Y.patch only, avoid processing feature patches)
+      for _p in $(printf -- '%s\n' ${source[@]} | grep -E 'kernel-[0-9]+\.[0-9]+\.patch$'); do  # https://stackoverflow.com/a/21058239/1821548
         # Patch version (4.15, "", ...)
         _patch=$(echo $_p | grep -Po "\d+\.\d+")
+
+        # Skip patches with no extractable version
+        [[ -z "$_patch" ]] && continue
+
+        # Reset whitelist for this iteration to avoid stale state
+        _whitelist=()
 
         # Cd in place
         cd "$srcdir"/"$_pkg"/kernel-$_kernel
@@ -1273,6 +1363,12 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         fi
         if [ "$_patch" = "6.12" ]; then
           _whitelist=(${_whitelist612[@]})
+        fi
+        if [ "$_patch" = "6.19" ]; then
+          _whitelist=(${_whitelist619[@]})
+        fi
+        if [ "$_patch" = "7.0" ]; then
+          _whitelist=(${_whitelist70[@]})
         fi
         patchy=0
         if (( $(vercmp "$_kernel" "$_patch") >= 0 )); then
@@ -1764,6 +1860,15 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
         fi
       fi
 
+      # 6.19
+      if (( $(vercmp "$_kernel" "6.19") >= 0 )); then
+        if [[ $pkgver = 470* ]]; then
+          cd "$srcdir"/"$_pkg"/kernel-dkms
+          msg2 "Applying kernel-6.19-470.patch for $_kernel..."
+          patch -Np1 -i "$srcdir"/kernel-6.19-470.patch
+        fi
+      fi
+
       if [ "$_gcc14" = "true" ]; then
         msg2 "Applying gcc-14 patch..."
         if [[ $pkgver = 470* ]]; then
@@ -1795,48 +1900,16 @@ DEST_MODULE_LOCATION[3]="/kernel/drivers/video"' dkms.conf
   fi
 }
 
-# Strip and sign kernel modules in one pass.
-# Uses llvm-strip for Clang-built kernels, GNU strip otherwise.
-# Signs kernel modules using the key configured in the kernel's .config (CONFIG_MODULE_SIG_KEY).
-# Skips signing with a warning if sign-file or the configured key is missing/not readable.
-_sign_modules() {
-  local _modulesdir="$1"
-  local _kern="$2"
-  local _kbuild="/usr/lib/modules/${_kern}/build"
-  local _sign_file="${_kbuild}/scripts/sign-file"
-
-  if [ ! -x "$_sign_file" ]; then
-    warning "sign-file not found for kernel ${_kern}, skipping module signing"
-    return
-  fi
-
-  local _sign_key
-  _sign_key="$(grep -Po 'CONFIG_MODULE_SIG_KEY="\K[^"]*' "${_kbuild}/.config" 2>/dev/null)"
-  [[ "$_sign_key" =~ ^/ ]] || _sign_key="${_kbuild}/${_sign_key}"
-  local _sign_cert="${_kbuild}/certs/signing_key.x509"
-
-  if [ ! -f "$_sign_key" ] || [ ! -r "$_sign_key" ]; then
-    warning "Module signing key not found or not readable for kernel ${_kern}, skipping module signing"
-    return
-  fi
-
-  local _hash_algo
-  _hash_algo="$(grep -Po 'CONFIG_MODULE_SIG_HASH="\K[^"]*' "${_kbuild}/.config" 2>/dev/null || echo sha512)"
-
-  local _strip_bin="strip"
-  grep -q "CONFIG_CC_IS_CLANG=y" "${_kbuild}/.config" 2>/dev/null && _strip_bin="llvm-strip"
-
-  msg2 "Signing modules in ${_modulesdir} (strip: ${_strip_bin}, algo: ${_hash_algo})..."
-
-  find "$_modulesdir" -type f -name '*.ko' -print \
-    -exec "${_strip_bin}" --strip-debug '{}' \; \
-    -exec "${_sign_file}" "${_hash_algo}" "${_sign_key}" "${_sign_cert}" '{}' \;
-}
-
 build() {
+  if [ "$_libxnvctrl" = "true" ]; then
+    cd "$srcdir/nvidia-settings-$pkgver"
+    make -C src PREFIX=/usr NV_USE_BUNDLED_LIBJANSSON=0 OUTPUTDIR=out out/libXNVCtrl.so
+    cd "$srcdir"
+  fi
+
   if [ "$_open_source_modules" != "true" ]; then
     if [ "$_dkms" != "true" ]; then
-      # Build for all kernels if no override specified, otherwise just the overrided one
+      # Build for all kernels if no override specified
       local _kernel
       local -a _kernels
       if [ -n "$_kerneloverride" ]; then
@@ -1845,43 +1918,53 @@ build() {
         mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
       fi
 
+      if [ ${#_kernels[@]} -eq 0 ]; then
+        error "Could not detect kernel version. Set _kerneloverride in customization.cfg."
+        return 1
+      fi
+
       for _kernel in "${_kernels[@]}"; do
         cd "$srcdir"/$_pkg/kernel-$_kernel
 
         # Detect compiler used to build the kernel and match it
         if grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/$_kernel/build/.config" 2>/dev/null; then
-          _cc="clang"; _ld="ld.lld"; _llvm="LLVM=1 LLVM_IAS=1"
+          _cc="clang"; _cxx="clang++"; _ld="ld.lld"; _llvm="LLVM=1 LLVM_IAS=1"
         else
-          _cc="gcc"; _ld="ld"; _llvm=""
+          _cc="gcc"; _cxx="g++"; _ld="ld"; _llvm=""
         fi
         # Build module
-        msg2 "Building Nvidia module for $_kernel (CC=$_cc${_llvm:+ $_llvm})..."
-        make CC="$_cc" LD="$_ld" ${_llvm} IGNORE_CC_MISMATCH=yes SYSSRC=/usr/lib/modules/$_kernel/build modules
+        msg2 "Building Nvidia module for $_kernel (CC=$_cc CXX=$_cxx${_llvm:+ $_llvm})..."
+        make CC="$_cc" CXX="$_cxx" LD="$_ld" ${_llvm} IGNORE_CC_MISMATCH=yes SYSSRC=/usr/lib/modules/$_kernel/build modules
       done
     fi
   else
     cd ${_srcbase}-${pkgver}
-    if [ -n "$_target_kernel" ] && [ -d "/usr/src/${_target_kernel}" ]; then
-      _linuxsrc="/usr/src/${_target_kernel}"
-      msg2 "Using linux src for _target_kernel '${_target_kernel}': ${_linuxsrc}"
+
+    # Build for all kernels if no override specified
+    local _kernel
+    local -a _kernels
+    if [ -n "$_kerneloverride" ]; then
+      _kernels=("$_kerneloverride")
     else
-      for _linuxsrc in /usr/src/*/vmlinux; do
-        _linuxsrc="${_linuxsrc//\/vmlinux}"
-        warning "Found linux src in: ${_linuxsrc}"
-      done
-      warning "Using linux src from: ${_linuxsrc} (last one listed)"
+      mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
     fi
-    # Detect compiler used to build the target kernel and match it
-    _kernel_build_dir="$(realpath "${_linuxsrc}")"
-    _cfg_file="${_kernel_build_dir}/.config"
-    [[ ! -f "$_cfg_file" ]] && _cfg_file="${_kernel_build_dir}/include/config/auto.conf"
-    if grep -q "CONFIG_CC_IS_CLANG=y" "$_cfg_file" 2>/dev/null; then
-      msg2 "Target kernel was built with clang - using clang/lld (LLVM=1 LLVM_IAS=1)"
-      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1 IGNORE_CC_MISMATCH=yes SYSSRC="${_linuxsrc}"
-    else
-      msg2 "Target kernel was built with gcc - using gcc"
-      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) IGNORE_CC_MISMATCH=yes SYSSRC="${_linuxsrc}"
+
+    if [ ${#_kernels[@]} -eq 0 ]; then
+      error "Could not detect kernel version. Set _kerneloverride in customization.cfg."
+      return 1
     fi
+
+    for _kernel in "${_kernels[@]}"; do
+      # Detect compiler used to build the kernel and match it
+      if grep -q "CONFIG_CC_IS_CLANG=y" "/usr/lib/modules/$_kernel/build/.config" 2>/dev/null; then
+        _cc="clang"; _cxx="clang++"; _ld="ld.lld"; _llvm="LLVM=1 LLVM_IAS=1"
+      else
+        _cc="gcc"; _cxx="g++"; _ld="ld"; _llvm=""
+      fi
+      # Build module finally
+      msg2 "Building open NVIDIA module for $_kernel (CC=$_cc CXX=$_cxx${_llvm:+ $_llvm})..."
+      CFLAGS= CXXFLAGS= LDFLAGS= make -j$(nproc) CC="$_cc" CXX="$_cxx" LD="$_ld" ${_llvm} IGNORE_CC_MISMATCH=yes SYSSRC=/usr/lib/modules/$_kernel/build modules
+    done
   fi
 }
 
@@ -2108,7 +2191,8 @@ nvidia-utils-tkg() {
   elif [ "$_eglx11" = "true" ]; then
     depends+=("$_branchname-egl-x11-tkg")
   fi
-  optdepends=('gtk2: nvidia-settings (GTK+ v2)'
+  optdepends=('nvidia-settings: configuration tool'
+              'gtk2: nvidia-settings (GTK+ v2)'
               'gtk3: nvidia-settings (GTK+ v3)'
               'opencl-nvidia-tkg: OpenCL support'
               'xorg-server' 'xorg-server-devel: nvidia-xconfig'
@@ -2346,6 +2430,15 @@ nvidia-utils-tkg() {
         install -D -m644 nvidia-dbus.conf "${pkgdir}/usr/share/dbus-1/system.d/nvidia-dbus.conf"
         install -D -m644 ${_path_addon1}nvidia-powerd.service "${pkgdir}/usr/lib/systemd/system/nvidia-powerd.service"
       fi
+      # Disable freezing user sessions during suspend/hibernate to avoid
+      # conflicts with the NVIDIA driver's own video memory preservation mechanism.
+      if (( ${pkgver%%.*} >= 580 )); then
+        install -Dm644 "${srcdir}/systemd-homed-override.conf" "${pkgdir}/usr/lib/systemd/system/systemd-homed.service.d/10-nvidia-no-freeze-session.conf"
+        install -Dm644 "${srcdir}/systemd-suspend-override.conf" "${pkgdir}/usr/lib/systemd/system/systemd-suspend.service.d/10-nvidia-no-freeze-session.conf"
+        install -Dm644 "${srcdir}/systemd-suspend-override.conf" "${pkgdir}/usr/lib/systemd/system/systemd-suspend-then-hibernate.service.d/10-nvidia-no-freeze-session.conf"
+        install -Dm644 "${srcdir}/systemd-suspend-override.conf" "${pkgdir}/usr/lib/systemd/system/systemd-hibernate.service.d/10-nvidia-no-freeze-session.conf"
+        install -Dm644 "${srcdir}/systemd-suspend-override.conf" "${pkgdir}/usr/lib/systemd/system/systemd-hybrid-sleep.service.d/10-nvidia-no-freeze-session.conf"
+      fi
     fi
 
     # gsp firmware
@@ -2368,7 +2461,7 @@ nvidia-utils-tkg() {
 
     if (( ${pkgver%%.*} >= 595 )); then
       # 595+ open modules use kernel suspend notifiers for video memory preservation
-      echo 'options nvidia NVreg_UseKernelSuspendNotifiers=1' | \
+      echo 'options nvidia NVreg_UseKernelSuspendNotifiers=1 NVreg_TemporaryFilePath=/var/tmp' | \
         install -Dm644 /dev/stdin "$pkgdir"/usr/lib/modprobe.d/nvidia-sleep.conf
     else
       # Enable PreserveVideoMemoryAllocations and TemporaryFilePath
@@ -2387,31 +2480,60 @@ nvidia-utils-tkg() {
     fi
 
     if (( ${pkgver%%.*} >= 580 )); then
-      # Vulkan GTK Renderer Crash fix ( NOTE: this looks like no more needed since 580+ but just in case regressions happen I leave it here commented below )
-      #install -Dm644 "$srcdir"/gsk-renderer.sh "$pkgdir"/etc/profile.d/gsk-renderer.sh
-      # Add limit vram usage scripts migrated from CachyOS
-      # https://github.com/CachyOS/CachyOS-PKGBUILDS/blob/master/nvidia/nvidia-utils/limit-vram-usage
-      install -Dm644 "${srcdir}/limit-vram-usage" "${pkgdir}/etc/nvidia/nvidia-application-profiles-rc.d/limit-vram-usage"
+      # Reduce idle power usage caused by CUDA contexts (NVDEC/NVENC, etc.)
+      # https://www.nvidia.com/en-us/drivers/details/257493/
+      install -Dm644 "${srcdir}/50-nvidia-cuda-disable-perf-boost.conf" "${pkgdir}/usr/lib/environment.d/50-nvidia-cuda-disable-perf-boost.conf"
     fi
 
-    if (( ${pkgver%%.*} >= 590 )); then
-      # Allow full perf while streaming/recording (see: NVIDIA/open-gpu-kernel-modules#333)
-      install -Dm644 "${srcdir}/cuda-no-stable-perf-limit" "${pkgdir}/etc/nvidia/nvidia-application-profiles-rc.d/cuda-no-stable-perf-limit"
-      # Reduce idle power usage caused by CUDA contexts (NVDEC/NVENC, etc.)
-      install -Dm644 "${srcdir}/50-nvidia-cuda-disable-perf-boost.conf" "${pkgdir}/usr/lib/environment.d/50-nvidia-cuda-disable-perf-boost.conf"
+    # Install performance optimizations
+    # Default to false if _perf_optimizations is empty
+    # Options: false, true, cuda, vram
+    # - false: no optimizations (default)
+    # - true: apply both CUDA and VRAM optimizations
+    # - vram: only apply VRAM usage limit
+    # - cuda: only apply CUDA performance optimization
+    _perf_optimizations="${_perf_optimizations:-false}"
+    # Check and apply performance tweaks
+    if [[ "${_perf_optimizations}" != "false" ]]; then
+      if (( ${pkgver%%.*} >= 580 )); then
+        # Apply VRAM limit if requested
+        if [[ "${_perf_optimizations}" == "true" ]] || [[ "${_perf_optimizations}" == "vram" ]]; then
+          msg2 "Applying VRAM usage limit optimization..."
+          # Limit vram usage
+          # Patch stolen from NextWork123 - https://github.com/CachyOS/CachyOS-PKGBUILDS/pull/873
+          # https://github.com/Frogging-Family/nvidia-all/blob/master/system/limit-vram-usage
+          install -Dm644 "${srcdir}/limit-vram-usage" "${pkgdir}/etc/nvidia/nvidia-application-profiles-rc.d/limit-vram-usage"
+        fi
+        # Apply CUDA performance optimization if requested
+        if [[ "${_perf_optimizations}" == "true" ]] || [[ "${_perf_optimizations}" == "cuda" ]]; then
+          msg2 "Applying CUDA performance optimization..."
+          # Allow full perf while streaming/recording (see: NVIDIA/open-gpu-kernel-modules#333)
+          install -Dm644 "${srcdir}/cuda-no-stable-perf-limit" "${pkgdir}/etc/nvidia/nvidia-application-profiles-rc.d/cuda-no-stable-perf-limit"
+        fi
+      else
+        warning "Performance optimizations require driver version >= 580 (current: ${pkgver})"
+      fi
     fi
 
     # Install nvidia-modprobe configuration to set advanced module parameters
     # Default to false if _modprobe is empty
     _modprobe="${_modprobe:-false}"
-    # Check and apply advanced NVIDIA module parameters (NVreg_*)
-    if [[ "${_modprobe}" == "true" ]]; then
-      if (( ${pkgver%%.*} >= 580 )); then
-        msg2 "Applying advanced NVIDIA module parameters (NVreg_*)..."
-        echo -e "options nvidia NVreg_UsePageAttributeTable=1 NVreg_InitializeSystemMemoryAllocations=0 NVreg_RegistryDwords=RmEnableAggressiveVblank=1" |
-          install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modprobe.d/${pkgname}-modprobe.conf"
-      else
-        warning "Advanced NVIDIA module parameters require driver version >= 580 (current: ${pkgver})"
+    # Default to false if _modprobe_mobile is empty
+    _modprobe_mobile="${_modprobe_mobile:-false}"
+    # Check driver version and apply advanced NVIDIA module parameters (NVreg_*)
+    if (( ${pkgver%%.*} >= 580 )); then
+      if [[ "${_modprobe}" == "true" ]]; then
+        msg2 "Applying advanced NVIDIA module parameters..."
+        install -Dm644 "${srcdir}/nvidia-modprobe.conf" "${pkgdir}/usr/lib/modprobe.d/${pkgname}-modprobe.conf"
+      fi
+
+      if [[ "${_modprobe_mobile}" == "true" ]]; then
+        msg2 "Applying advanced NVIDIA module parameters for mobile devices..."
+        install -Dm644 "${srcdir}/nvidia-modprobe-mobile.conf" "${pkgdir}/usr/lib/modprobe.d/${pkgname}-modprobe.conf"
+      fi
+    else
+      if [[ "${_modprobe}" == "true" ]] || [[ "${_modprobe_mobile}" == "true" ]]; then
+        warning "Advanced NVIDIA module parameters require driver version >= 590 (current: ${pkgver})"
       fi
     fi
 
@@ -2453,7 +2575,16 @@ nvidia-utils-tkg() {
       fi
     fi
 
+    # create missing soname links
     _create_links
+
+    # Blacklist nouveau
+    if [[ "$_blacklist_nouveau" != "false" ]]; then
+      echo -e "blacklist nouveau\nblacklist lbm-nouveau\nblacklist nova_core\nblacklist nova_drm" |
+        install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modprobe.d/${pkgname}-blacklist.conf"
+    else
+      msg2 "Skipping nouveau blacklist due to user config"
+    fi
 }
 source /dev/stdin <<EOF
 package_$_branchname-utils-tkg() {
@@ -2463,9 +2594,15 @@ EOF
 
 nvidia-settings-tkg() {
     pkgdesc='Tool for configuring the NVIDIA graphics driver'
-    depends=("nvidia-utils-tkg>=${pkgver}" 'gtk3')
+    depends=("nvidia-utils-tkg>=${pkgver}" 'jansson' 'gtk3' 'libxv' 'libvdpau')
+    if [ "$_libxnvctrl" = "true" ]; then
+      depends+=("$_branchname-libxnvctrl-tkg")
+    elif [ "$_libxnvctrl" = "external" ]; then
+      depends+=('libxnvctrl')
+    fi
     provides=("nvidia-settings=${pkgver}" "nvidia-settings-tkg=${pkgver}")
     conflicts=('nvidia-settings')
+    options=('staticlibs')
 
     cd "$_pkg"
 
@@ -2473,7 +2610,9 @@ nvidia-settings-tkg() {
     install -D -m644 nvidia-settings.1.gz    -t "${pkgdir}/usr/share/man/man1"
     install -D -m644 nvidia-settings.png     -t "${pkgdir}/usr/share/pixmaps"
     install -D -m644 nvidia-settings.desktop -t "${pkgdir}/usr/share/applications"
-    sed -e 's:__UTILS_PATH__:/usr/bin:' -e 's:__PIXMAP_PATH__/nvidia-settings.png:nvidia-settings:' -i "${pkgdir}/usr/share/applications/nvidia-settings.desktop"
+    sed -e 's:__UTILS_PATH__:/usr/bin:' -e 's:__PIXMAP_PATH__/nvidia-settings.png:nvidia-settings:' \
+        -e 's/__NVIDIA_SETTINGS_DESKTOP_CATEGORIES__/Settings;HardwareSettings;/' \
+        -i "${pkgdir}/usr/share/applications/nvidia-settings.desktop"
 
     install -D -m755 "libnvidia-gtk3.so.${pkgver}" -t "${pkgdir}/usr/lib"
 
@@ -2491,49 +2630,73 @@ package_$_branchname-settings-tkg() {
 }
 EOF
 
+libxnvctrl-tkg() {
+    pkgdesc='NVIDIA NV-CONTROL X extension'
+    depends=('libxext')
+    provides=('libxnvctrl' 'libXNVCtrl.so')
+    conflicts=('libxnvctrl')
+    replaces=('libxnvctrl')
+
+    cd "$srcdir/nvidia-settings-$pkgver"
+
+    install -Dm644 doc/{NV-CONTROL-API.txt,FRAMELOCK.txt} -t "${pkgdir}/usr/share/doc/${pkgname}"
+    install -Dm644 samples/{Makefile,README,*.c,*.h,*.mk} -t "${pkgdir}/usr/share/doc/${pkgname}/samples"
+
+    install -Dm644 src/libXNVCtrl/*.h -t "${pkgdir}/usr/include/NVCtrl"
+    install -d "${pkgdir}/usr/lib"
+    cp -Pr src/out/libXNVCtrl.* -t "${pkgdir}/usr/lib"
+}
+if [ "$_libxnvctrl" = "true" ]; then
+source /dev/stdin <<EOF
+package_$_branchname-libxnvctrl-tkg() {
+  libxnvctrl-tkg
+}
+EOF
+fi
+
 if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
   nvidia-tkg() {
   if [ "$_open_source_modules" = "true" ]; then
       pkgdesc="Open NVIDIA kernel modules for all installed kernels"
-      depends+=('linux')
+      depends=('linux')
       conflicts=('NVIDIA-MODULE')
       provides=('NVIDIA-MODULE')
-      license=('MIT AND GPL-2.0-only')
 
       cd ${_srcbase}-${pkgver}
-      # Detect installed kernel version
-      local _kern_ver
+
+      # Install for all kernels if no override specified
+      local _kernel
+      local -a _kernels
       if [ -n "$_kerneloverride" ]; then
-        _kern_ver="$_kerneloverride"
-      elif [ -f /usr/src/linux/version ]; then
-        _kern_ver="$(</usr/src/linux/version)"
+        _kernels=("$_kerneloverride")
       else
-        _kern_ver="$(find /usr/lib/modules/*/build/version -exec cat {} + 2>/dev/null | head -1)"
-        [ -z "$_kern_ver" ] && _kern_ver="$(find /usr/lib/modules/*/extramodules/version -exec cat {} + 2>/dev/null | head -1)"
-        [ -z "$_kern_ver" ] && _kern_ver="$(uname -r)"
-      fi
-      msg2 "Installing open NVIDIA modules for kernel: ${_kern_ver}"
-      _extradir="/usr/lib/modules/${_kern_ver}/extramodules"
-      install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
-      # Strip and sign modules (llvm-strip used automatically for Clang-built kernels)
-      if [ "${_module_signing:-false}" = "true" ]; then
-        _sign_modules "${pkgdir}${_extradir}" "${_kern_ver}"
+        mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
       fi
 
-      find "${pkgdir}" -name '*.ko' -exec xz {} +
+      if [ ${#_kernels[@]} -eq 0 ]; then
+        error "Could not detect kernel version. Set _kerneloverride in customization.cfg."
+        return 1
+      fi
+
+      for _kernel in "${_kernels[@]}"; do
+        # Detect the kernel source directory for the current kernel
+        msg2 "Installing open NVIDIA modules for kernel: ${_kernel}"
+        local _extradir="/usr/lib/modules/${_kernel}/extramodules"
+        install -Dt "${pkgdir}${_extradir}" -m644 kernel-open/*.ko
+        # Strip debug symbols and compress the modules
+        if grep -q "CONFIG_CC_IS_CLANG=y" /usr/lib/modules/${_kernel}/build/.config 2>/dev/null; then
+          find "${pkgdir}${_extradir}" -name '*.ko' -exec llvm-strip --strip-debug {} +
+        else
+          find "${pkgdir}${_extradir}" -name '*.ko' -exec strip --strip-debug {} +
+        fi
+        find "${pkgdir}${_extradir}" -name '*.ko' -exec xz {} +
+      done
 
       # Force module to load even on unsupported GPUs
       mkdir -p "$pkgdir"/usr/lib/modprobe.d
       echo "options nvidia NVreg_OpenRmEnableUnsupportedGpus=1" > "$pkgdir"/usr/lib/modprobe.d/${pkgname}-gpus.conf
 
       install -Dm644 COPYING "$pkgdir"/usr/share/licenses/$pkgname
-
-      if [ "$_blacklist_nouveau" = false ]; then
-          echo "skip blacklist nouveau\n"
-        else
-            echo -e "blacklist nouveau\nblacklist lbm-nouveau\nblacklist nova_core\nblacklist nova_drm" |
-                install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modprobe.d/${pkgname}-blacklist.conf"
-      fi
 
       if [[ ! "$_disable_libalpm_hook" == "true" ]]; then
         install -Dm644 "${srcdir}/nvidia-tkg.hook" "${pkgdir}/usr/share/libalpm/hooks/nvidia-tkg.hook"
@@ -2547,22 +2710,18 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
       conflicts=('nvidia-96xx' 'nvidia-173xx' 'nvidia')
       install=nvidia-tkg.install
 
-      # Install for all kernels (or only for _target_kernel if set)
+      # Install for all kernels if no override specified
       local _kernel
       local -a _kernels
-      if [ -n "$_target_kernel" ]; then
-        mapfile -t _kernels < <(
-          for _mod_dir in /usr/lib/modules/*/; do
-            _pkgbase_file="${_mod_dir}pkgbase"
-            if [ -f "$_pkgbase_file" ] && [ "$(cat "$_pkgbase_file")" = "$_target_kernel" ]; then
-              _ver_file="${_mod_dir}build/version"
-              [ -f "$_ver_file" ] || _ver_file="${_mod_dir}extramodules/version"
-              [ -f "$_ver_file" ] && cat "$_ver_file"
-            fi
-          done
-        )
+      if [ -n "$_kerneloverride" ]; then
+        _kernels=("$_kerneloverride")
       else
         mapfile -t _kernels < <(find /usr/lib/modules/*/build/version -exec cat {} + || find /usr/lib/modules/*/extramodules/version -exec cat {} +)
+      fi
+
+      if [ ${#_kernels[@]} -eq 0 ]; then
+        error "Could not detect kernel version. Set _kerneloverride in customization.cfg."
+        return 1
       fi
 
       for _kernel in "${_kernels[@]}"; do
@@ -2574,13 +2733,12 @@ if [ "$_dkms" = "false" ] || [ "$_dkms" = "full" ]; then
         find "$pkgdir" -name '*.ko' -exec gzip -n {} +
       done
 
-      if [ "$_blacklist_nouveau" = false ]; then
-          echo "skip blacklist nouveau\n"
-        else
-            echo -e "blacklist nouveau\nblacklist lbm-nouveau\nblacklist nova_core\nblacklist nova_drm" |
-                install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modprobe.d/${pkgname}-blacklist.conf"
-            echo "nvidia-uvm" |
-                install -Dm644 /dev/stdin "${pkgdir}/etc/modules-load.d/${pkgname}-uvm.conf"
+      # Enable nvidia-uvm autoload at boot
+      if [[ "$_blacklist_nouveau" != "false" ]]; then
+        echo "nvidia-uvm" |
+          install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modules-load.d/${pkgname}-uvm.conf"
+      else
+        msg2 "Skipping nvidia-uvm autoload due to user config"
       fi
 
       if [[ ! "$_disable_libalpm_hook" == "true" ]]; then
@@ -2695,6 +2853,11 @@ lib32-nvidia-utils-tkg() {
     # PTX JIT Compiler (Parallel Thread Execution (PTX) is a pseudo-assembly language for CUDA)
     install -D -m755 "libnvidia-ptxjitcompiler.so.${pkgver}" "${pkgdir}/usr/lib32/libnvidia-ptxjitcompiler.so.${pkgver}"
 
+    # NVVM Compiler library loaded by the CUDA driver to do JIT link-time-optimization
+    if [[ -e libnvidia-nvvm.so.${pkgver} ]]; then
+      install -D -m644 "libnvidia-nvvm.so.${pkgver}" "${pkgdir}/usr/lib32/libnvidia-nvvm.so.${pkgver}"
+    fi
+
     # Fat (multiarchitecture) binary loader
     if [[ $pkgver = 396* ]] || [[ $pkgver = 41* ]] || [[ $pkgver = 43* ]] || [[ $pkgver = 44* ]]; then
       install -D -m755 "libnvidia-fatbinaryloader.so.${pkgver}" "${pkgdir}/usr/lib32/libnvidia-fatbinaryloader.so.${pkgver}"
@@ -2714,6 +2877,7 @@ lib32-nvidia-utils-tkg() {
       install -Dm755 "libnvidia-tileiras.so.${pkgver}" "${pkgdir}/usr/lib32/libnvidia-tileiras.so.${pkgver}"
     fi
 
+    # create missing soname links
     _create_links
 
     rm -rf "${pkgdir}"/usr/{include,share,bin}
@@ -2728,49 +2892,47 @@ EOF
 
 if [ "$_dkms" = "true" ] || [ "$_dkms" = "full" ]; then
   nvidia-dkms-tkg() {
-  if [ "$_open_source_modules" = "true" ]; then
-      depends+=('dkms')
-      conflicts=('nvidia-open' 'NVIDIA-MODULE')
-      provides=('nvidia-open' 'NVIDIA-MODULE')
-      license=('MIT AND GPL-2.0-only')
+    if [ "$_open_source_modules" = "true" ]; then
+        depends=('dkms')
+        conflicts=('nvidia-open' 'NVIDIA-MODULE' 'nvidia-dkms')
+        provides=('nvidia-open' 'NVIDIA-MODULE')
 
-      install -dm 755 "${pkgdir}"/usr/src
-      # cp -dr --no-preserve='ownership' kernel-open "${pkgdir}/usr/src/nvidia-$pkgver"
-      cp -dr --no-preserve='ownership' open-gpu-kernel-modules-dkms "${pkgdir}/usr/src/nvidia-$pkgver"
-      mv "${pkgdir}/usr/src/nvidia-$pkgver/kernel-open/dkms.conf" "${pkgdir}/usr/src/nvidia-$pkgver/dkms.conf"
+        install -dm 755 "${pkgdir}"/usr/src
+        # cp -dr --no-preserve='ownership' kernel-open "${pkgdir}/usr/src/nvidia-$pkgver"
+        cp -dr --no-preserve='ownership' open-gpu-kernel-modules-dkms "${pkgdir}/usr/src/nvidia-$pkgver"
+        mv "${pkgdir}/usr/src/nvidia-$pkgver/kernel-open/dkms.conf" "${pkgdir}/usr/src/nvidia-$pkgver/dkms.conf"
 
-      # Force module to load even on unsupported GPUs
-      mkdir -p "$pkgdir"/usr/lib/modprobe.d
-      echo "options nvidia NVreg_OpenRmEnableUnsupportedGpus=1" > "$pkgdir"/usr/lib/modprobe.d/nvidia-open.conf
+        # Force module to load even on unsupported GPUs
+        mkdir -p "$pkgdir"/usr/lib/modprobe.d
+        echo "options nvidia NVreg_OpenRmEnableUnsupportedGpus=1" > "$pkgdir"/usr/lib/modprobe.d/nvidia-open.conf
 
-      install -Dm644 ${_srcbase}-${pkgver}/COPYING "$pkgdir"/usr/share/licenses/$pkgname
-  else
-      pkgdesc="NVIDIA kernel module sources (DKMS)"
-      depends=('dkms' "nvidia-utils-tkg>=${pkgver}" 'nvidia-libgl' 'pahole')
-      provides=("nvidia=${pkgver}" 'nvidia-dkms' "nvidia-dkms-tkg=${pkgver}" 'NVIDIA-MODULE')
-      conflicts=('nvidia' 'nvidia-dkms')
-
-      cd ${_pkg}
-      install -dm 755 "${pkgdir}"/usr/{lib/modprobe.d,src}
-      cp -dr --no-preserve='ownership' kernel-dkms "${pkgdir}/usr/src/nvidia-${pkgver}"
-
-      if [[ ! "$_disable_libalpm_hook" == "true" ]]; then
-        install -Dm644 "${srcdir}/nvidia-tkg.hook" "${pkgdir}/usr/share/libalpm/hooks/nvidia-tkg.hook"
-      else
-        echo "Skipping mkinitcpio hook due to user config"
-      fi 
-
-      install -Dt "${pkgdir}/usr/share/licenses/${pkgname}" -m644 "${srcdir}/${_pkg}/LICENSE"
-  fi
-
-  if [ "$_blacklist_nouveau" = false ]; then
-      echo "skip blacklist nouveau\n"
+        install -Dm644 ${_srcbase}-${pkgver}/COPYING "$pkgdir"/usr/share/licenses/$pkgname
     else
-        echo -e "blacklist nouveau\nblacklist lbm-nouveau\nblacklist nova_core\nblacklist nova_drm" |
-            install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modprobe.d/${pkgname}-blacklist.conf"
-        echo "nvidia-uvm" |
-            install -Dm644 /dev/stdin "${pkgdir}/etc/modules-load.d/${pkgname}-uvm.conf"
-  fi
+        pkgdesc="NVIDIA kernel module sources (DKMS)"
+        depends=('dkms' "nvidia-utils-tkg>=${pkgver}" 'nvidia-libgl' 'pahole')
+        provides=("nvidia=${pkgver}" 'nvidia-dkms' "nvidia-dkms-tkg=${pkgver}" 'NVIDIA-MODULE')
+        conflicts=('nvidia' 'nvidia-dkms')
+
+        cd ${_pkg}
+        install -dm 755 "${pkgdir}"/usr/{lib/modprobe.d,src}
+        cp -dr --no-preserve='ownership' kernel-dkms "${pkgdir}/usr/src/nvidia-${pkgver}"
+
+        if [[ ! "$_disable_libalpm_hook" == "true" ]]; then
+          install -Dm644 "${srcdir}/nvidia-tkg.hook" "${pkgdir}/usr/share/libalpm/hooks/nvidia-tkg.hook"
+        else
+          echo "Skipping mkinitcpio hook due to user config"
+        fi 
+
+        install -Dt "${pkgdir}/usr/share/licenses/${pkgname}" -m644 "${srcdir}/${_pkg}/LICENSE"
+    fi
+
+    # Enable nvidia-uvm autoload at boot
+    if [[ "$_blacklist_nouveau" != "false" ]]; then
+      echo "nvidia-uvm" |
+        install -Dm644 /dev/stdin "${pkgdir}/usr/lib/modules-load.d/${pkgname}-uvm.conf"
+    else
+      msg2 "Skipping nvidia-uvm autoload due to user config"
+    fi
   }
 source /dev/stdin <<EOF
   package_$__branchname-dkms-tkg() {
