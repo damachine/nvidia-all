@@ -653,6 +653,15 @@ prepare() {
     cd "$srcdir"
   fi
 
+  if [ "${_build_utils_package_only:-false}" = "true" ]; then
+    msg2 "_build_utils_package_only=true - skipping kernel module prepare steps."
+    cd "$srcdir/$_pkg"
+    if [ -f nvidia-persistenced-init.tar.bz2 ]; then
+      bsdtar -xf nvidia-persistenced-init.tar.bz2
+    fi
+    return 0
+  fi
+
   if [ "$_open_source_modules" = "true" ]; then
     cd ${_srcbase}-${pkgver}
 
@@ -733,9 +742,7 @@ prepare() {
     # 6.19 whitelist definition
     _open_whitelist619=( 590* )
     # 7.0 whitelist definition
-    _open_whitelist70=( 590* 595* )
-    # 7.0 580-specific whitelist definition
-    _open_whitelist70_580=( 580* )
+    _open_whitelist70=( 580* 590* 595* )
     # Add future kernel version whitelists here following the same pattern
 
     local -a _kernels
@@ -779,11 +786,11 @@ prepare() {
     fi
     # 7.0
     if [ "${_open_kernel70}" = "1" ]; then
+      patchy=0
+      for yup in "${_open_whitelist70[@]}"; do
+        [[ ${pkgver} = ${yup} ]] && patchy=1
+      done
       if (( ${pkgver%%.*} >= 590 )); then
-        patchy=0
-        for yup in "${_open_whitelist70[@]}"; do
-          [[ ${pkgver} = ${yup} ]] && patchy=1
-        done
         if [ "${patchy}" = "1" ]; then
           msg2 "Applying kernel-7.0.patch to kernel-open..."
           ( cd "${srcdir}/${_srcbase}-${pkgver}/kernel-open" && patch -Np2 -i "${srcdir}/kernel-7.0.patch" )
@@ -791,14 +798,7 @@ prepare() {
           msg2 "Skipping kernel-7.0.patch as it doesn't apply to driver version ${pkgver}..."
         fi
       fi
-    fi
-    # 7.0 580-specific
-    if [ "${_open_kernel70}" = "1" ]; then
       if (( ${pkgver%%.*} == 580 )); then
-        patchy=0
-        for yup in "${_open_whitelist70_580[@]}"; do
-          [[ ${pkgver} = ${yup} ]] && patchy=1
-        done
         if [ "${patchy}" = "1" ]; then
           msg2 "Applying kernel-7.0-580.patch to kernel-open..."
           ( cd "${srcdir}/${_srcbase}-${pkgver}/kernel-open" && patch -Np1 -i "${srcdir}/kernel-7.0-580.patch" )
