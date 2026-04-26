@@ -1,68 +1,143 @@
-# Nvidia driver latest to 396 series AIO installer
+# nvidia-all
 
-LIBGLVND compatible, with 32 bit libs and DKMS enabled out of the box (you will still be asked if you want to use the regular package). Installs for all currently installed kernels. Comes with custom patches to enhance kernel compatibility, dynamically applied when you're requesting a driver that's not compatible OOTB with your currently installed kernel(s).
-Unwanted packages can be disabled with switches in the PKGBUILD. Defaults to complete installation.
+### This fork tracks [upstream](https://github.com/Frogging-Family/nvidia-all) closely and adds some spice on top.
 
-Huge thanks to Isaak I. Aleksandrov who has been much faster at offering compat patches than myself for a good while now! https://gitlab.com/EULA
+> [!NOTE]
+> **New to nvidia-all?** Start with the [upstream project README](https://github.com/Frogging-Family/nvidia-all/blob/master/README.md) to get familiar with the general concept, the available options and the build workflow. Come back here once you know the basics.
+> 
+> Please do not report bugs to the upstream repository when using this fork.
 
-You may need/want to add a pacman hook for nvidia depending on your setup : https://wiki.archlinux.org/index.php/NVIDIA#DRM_kernel_mode_setting
+---
 
-Vulkan dev drivers : https://developer.nvidia.com/vulkan-driver
+<br />
 
-Regular drivers : https://www.nvidia.com/object/unix.html
+### Extra knobs in `customization.cfg`
 
-## Note regarding 470 series
+All on top of what upstream already offers - knobs live in [`customization.cfg`](https://github.com/damachine/nvidia-all/blob/staging/customization.cfg#L28-L192).
 
-**Nvidia's support for Kepler GPUs ended on September 2024 ( see https://nvidia.custhelp.com/app/answers/detail/a_id/5202 ), so 470 series is unlikely to be updated going forward. As a result using a LTS kernel is recommended/needed to prevent issues (<=6.6.y).**
+- [nvidia-all](#nvidia-all)
+    - [This fork tracks upstream closely and adds some spice on top.](#this-fork-tracks-upstream-closely-and-adds-some-spice-on-top)
+    - [Extra knobs in `customization.cfg`](#extra-knobs-in-customizationcfg)
+      - [`_build_utils_package_only` - build userspace/utility packages only (skip kernel module package)](#_build_utils_package_only---build-userspaceutility-packages-only-skip-kernel-module-package)
+      - [`_driver_version_tag` - direct known-version selector (skip interactive version prompt)](#_driver_version_tag---direct-known-version-selector-skip-interactive-version-prompt)
+      - [`_target_kernel` - target a specific installed kernel pkgbase for non-DKMS builds](#_target_kernel---target-a-specific-installed-kernel-pkgbase-for-non-dkms-builds)
+      - [`_module_signing` - install post-transaction NVIDIA module signing hook (experimental)](#_module_signing---install-post-transaction-nvidia-module-signing-hook-experimental)
+    - [Install procedure](#install-procedure)
 
-## How to run the installer
+<br />
+
+#### `_build_utils_package_only` - build userspace/utility packages only (skip kernel module package)
+
+| Value | Description |
+|---|---|
+| `"false"` | Default behavior (build kernel module package and userspace packages) |
+| `"true"` | Skip kernel module package and only build userspace/utility packages |
+
+Userspace/utility package set:
+
+- `opencl-nvidia-tkg`
+- `nvidia-utils-tkg`
+- `nvidia-settings-tkg`
+- `lib32-opencl-nvidia-tkg` (when `_lib32="true"`)
+- `lib32-nvidia-utils-tkg` (when `_lib32="true"`)
+
+Example:
+
+```properties
+_build_utils_package_only="true"
 ```
-git clone https://github.com/Frogging-Family/nvidia-all.git
+
+<br />
+
+#### `_driver_version_tag` - direct known-version selector (skip interactive version prompt)
+
+| Value | Description |
+|---|---|
+| `""` | Default behavior (normal interactive driver selection) |
+| `"595.44.03"` | Vulkan developer branch preset |
+| `"595.58.03"` | 595 regular branch preset |
+| `"580.142"` | 580 regular branch preset |
+| any other string | Falls back to interactive prompt |
+
+Example:
+
+```properties
+_driver_version_tag="595.45.04"
+```
+
+<br />
+
+#### `_target_kernel` - target a specific installed kernel pkgbase for non-DKMS builds
+
+| Value | Description |
+|---|---|
+| `""` | Default autodetection behavior |
+| kernel pkgbase name (for example `"linux-tkg"`) | Resolve that installed kernel and build/install modules for it |
+
+Only relevant when `_dkms="false"` or `_dkms="full"`.
+
+Examples:
+
+```properties
+_target_kernel="linux-tkg"
+```
+
+```shell
+grep -r "" /usr/lib/modules/*/pkgbase
+```
+
+<br />
+<br />
+
+> These options below were added for personal testing and are left in for anyone who might find it useful.
+
+#### `_module_signing` - install post-transaction NVIDIA module signing hook (experimental)
+
+```properties
+_module_signing="false"
+```
+
+When set to `"true"`, nvidia-all installs a root-run pacman hook that signs installed NVIDIA modules after package installation/upgrade.
+
+Requirements:
+
+- Kernel build tree must provide `scripts/sign-file`
+- Key path from `CONFIG_MODULE_SIG_KEY` must exist
+- Certificate `certs/signing_key.x509` must exist
+
+Notes:
+
+- No effect when `_disable_libalpm_hook="true"`
+- For linux-tkg kernels, this typically requires building headers with `_install_signing_keys="true"`
+
+> [!WARNING]
+> The private key is stored on disk (root-readable). Anyone with root or physical access can extract it and sign arbitrary modules. If security is a concern, use full-disk encryption (for example LUKS).
+
+---
+
+<br />
+
+### Install procedure
+
+> [!TIP]
+> **Recommended:** Use [tkginstaller](https://github.com/damachine/tkginstaller) for an interactive guided build experience with fzf menus, automatic dependency handling, and config management.
+> ```shell
+> # install tkginstaller (AUR)
+> yay -S tkginstaller-git
+> 
+> # Use fzf-finder TUI mode, simply run
+> tkginstaller
+> # Use direct command with package name, for example
+> tkginstaller nvidia         # or shortcut n
+> tkginstaller linux-nvidia   # or shortcut ln
+> ```
+
+(Arch & derivatives)
+
+```shell
+git clone https://github.com/damachine/nvidia-all.git
 cd nvidia-all
 makepkg -si
 ```
-Then follow the prompts.
 
-### To update the installer
-```
-cd nvidia-all
-git pull
-makepkg -si
-```
-Then follow the prompts as before.
-
-## How to uninstall and revert to distro provided packages
-For arch and its derivatives you can uninstall using:
-```
-sudo pacman -Rdd lib32-nvidia-utils-tkg lib32-opencl-nvidia-tkg nvidia-dkms-tkg nvidia-egl-wayland-tkg nvidia-settings-tkg nvidia-utils-tkg opencl-nvidia-tkg
-```
-And install the distro dkms packages:
-
-```
-sudo pacman -S nvidia-dkms egl-wayland lib32-nvidia-utils lib32-opencl-nvidia nvidia-settings opencl-nvidia nvidia-utils
-```
-Alternatively install the dkms open kernel modules (Turing or newer hardware only!!!) with:
-```
-sudo pacman -S nvidia-open-dkms egl-wayland lib32-nvidia-utils lib32-opencl-nvidia nvidia-settings opencl-nvidia nvidia-utils
-```
-After installing the drivers provided by your distro everything should function as normal after a reboot.
-# DKMS or regular?
-DKMS is recommended as it allows for automatic module rebuilding on kernel updates. As long as you're on the same major version (5.8.x for example), you won't need to regenerate the packages on updates, which is a huge QoL feature. Regular modules can also be problematic on Manjaro due to differences in kernel hooking mechanisms compared to Arch. So if in doubt, go DKMS.
-
-
-## My DKMS driver installed with kernel X.1 doesn't work/build anymore after I upgraded to kernel X.2! Help!
-- Simply rebuild the packages so the script can detect your currently installed kernel(s) and patch your driver accordingly to fix compatibility issues.
-
-# How to generate a package for a driver that isn't listed (390 and lower branches are not supported) :
-- When you are prompted for driver version, select "custom" (choice 6).
-- You'll then be asked the branch group. Select either "Vulkan dev" (choice 2) for Vulkan dev drivers or "stable or regular beta" (choice 1) for every other driver.
-- Now you have to enter the version number of the desired driver. Vulkan dev drivers version is usually formatted as `mainbranch.version.subversion` (i.e.: 415.22.01) while the stable or regular beta drivers version is usually (but not always) `mainbranch.version` (i.e.: 415.25)
-- To finish, you'll be asked if you want dkms(recommended) or regular modules, similarly to the usual drivers versions.
-
-# Optimus users :
-- A great tool exists for you and works with these nvidia-all packages: https://github.com/Askannz/optimus-manager
-- 435.17 beta has introduced PRIME render offload support. You can learn more about the needed setup here: http://us.download.nvidia.com/XFree86/Linux-x86_64/435.17/README/primerenderoffload.html
-
-# Mostlyportable-gcc users :
-- For non-dkms nvidia-all packages, setting your `CUSTOM_GCC_PATH` in .cfg is enough.
-- For dkms nvidia-all packages, you'll need to make DKMS aware of your mostlyportable-gcc build. See: https://github.com/Tk-Glitch/PKGBUILDS/issues/334#issuecomment-537197636
+---
