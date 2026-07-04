@@ -42,12 +42,12 @@ and other customization features.
     - [Download fails](#download-fails)
 
 ## What nvidia-all adds
-  
+
 - Vulkan dev drivers : https://developer.nvidia.com/vulkan-driver
 - Regular drivers : https://www.nvidia.com/object/unix.html
 - Builds current and legacy NVIDIA Linux drivers.
 - Supports proprietary kernel modules and NVIDIA open kernel modules.
-- Detects installed kernels and applies compatibility patches where needed. 
+- Detects installed kernels and applies compatibility patches where needed.
 - Offers DKMS and regular package variants.
 - Supports optional split packages.
 - Exposes many build/runtime toggles through customization.cfg.
@@ -74,7 +74,7 @@ cd nvidia-all
 # Arch-based
 makepkg -si
 
-# All distributions 
+# All distributions
 ./install.sh
 ```
 
@@ -90,7 +90,7 @@ cd nvidia-all
 git pull
 makepkg -si
 # or
-./install.sh 
+./install.sh
 ```
 
 Then follow the prompts as before.
@@ -107,13 +107,13 @@ series suffixes, dkms vs regular, lib32, split components).
 List installed nvidia-all packages first:
 
 ```bash
-pacman -Qq | grep -E 'nvidia*.*-tkg'
+pacman -Qq | grep -E 'nvidia.*-tkg$'
 ```
 
 If the list looks correct, remove the matched packages:
 
 ```bash
-pacman -Qq | grep -E 'nvidia*.*-tkg' | xargs -r sudo pacman -Rdd
+pacman -Qq | grep -E 'nvidia.*-tkg$' | xargs -r -o sudo pacman -Rdd
 ```
 
 ### 2) Reinstall distro packages
@@ -145,23 +145,23 @@ List installed nvidia-all packages:
 
 ```bash
 # Debian/Ubuntu
-dpkg -l | grep nvidia-tkg
+dpkg-query -W -f='${Package}\n' | grep -E 'nvidia.*-tkg$'
 
 # Fedora/SUSE
-rpm -qa | grep nvidia-tkg
+rpm -qa | grep -E 'nvidia.*-tkg$'
 ```
 
 Remove them:
 
 ```bash
 # Debian/Ubuntu
-sudo dpkg -r <package-name>...
+dpkg-query -W -f='${Package}\n' | grep -E 'nvidia.*-tkg$' | xargs -r -o sudo dpkg -r
 
 # Fedora
-sudo rpm -e <package-name>...
+rpm -qa | grep -E 'nvidia.*-tkg$' | xargs -r -o sudo rpm -e
 
 # SUSE
-sudo zypper remove <package-name>...
+rpm -qa | grep -E 'nvidia.*-tkg$' | xargs -r -o sudo zypper remove
 ```
 
 Then reinstall the NVIDIA driver provided by your distro.
