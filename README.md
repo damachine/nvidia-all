@@ -113,7 +113,7 @@ pacman -Qq | grep -E 'nvidia.*-tkg$'
 If the list looks correct, remove the matched packages:
 
 ```bash
-pacman -Qq | grep -E 'nvidia.*-tkg$' | xargs -r -o sudo pacman -Rdd
+sudo pacman -Rdd $(pacman -Qq | grep -E 'nvidia.*-tkg$')
 ```
 
 ### 2) Reinstall distro packages
