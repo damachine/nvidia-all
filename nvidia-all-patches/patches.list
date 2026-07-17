@@ -158,9 +158,9 @@ dkms     470/clang.patch                                                        
 closed   470/clang.patch                                                               4.0      4.0.9999    470          470.9999     1      .              _clang
 
 # conftest GCC 14 compat
-dkms     470/0001-Fix-conftest-to-ignore-implicit-function-declaration.patch           -        -           470.40       -            1      kernel-dkms
-dkms     470/0002-Fix-conftest-to-use-a-short-wchar_t.patch                            -        -           470.40       -            1      kernel-dkms
-dkms     470/0003-Fix-conftest-to-use-nv_drm_gem_vmap-which-has-the-se.patch           -        -           470.40       -            1      kernel-dkms
+dkms     470/0001-Fix-conftest-to-ignore-implicit-function-declaration.patch           -        -           470.40       470.9999     1      kernel-dkms
+dkms     470/0002-Fix-conftest-to-use-a-short-wchar_t.patch                            -        -           470.40       470.9999     1      kernel-dkms
+dkms     470/0003-Fix-conftest-to-use-nv_drm_gem_vmap-which-has-the-se.patch           -        -           470.40       470.9999     1      kernel-dkms
 
 # modeset by default (required for 6.12 support)
 dkms     470/nvidia-470xx-Enable-modeset-by-default.patch                              -        -           470          470.9999     2      kernel-dkms
