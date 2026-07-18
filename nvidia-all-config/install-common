@@ -11,7 +11,10 @@ _latest_matching_file() { compgen -G "$1" | sort -V | tail -1; }
 _eglw_so_ver() {
   local _file
   _file="$(_latest_matching_file "$1")"
-  [[ -n "${_file}" ]] && printf '%s\n' "${_file##*.so.}"
+  if [[ -n "${_file}" ]]; then
+    printf '%s\n' "${_file##*.so.}"
+  fi
+  return 0
 }
 _sys_pkg_all() { [[ "${_NV_PKG_TARGET:-}" =~ ^(fedora|debian|ubuntu)$ ]]; }
 _sys_pkg_rpm() { [[ "${_NV_PKG_TARGET:-}" = "fedora" ]]; }

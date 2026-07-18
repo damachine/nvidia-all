@@ -822,8 +822,17 @@ _create_links() {
     [[ -z "${_soname_name}" ]] && continue
     _soname="${_dir}/${_soname_name}"
     _base="${_dir}/$(echo "${_soname_name}" | sed -r 's/(.*)\.so.*/\1.so/')"
-    [[ -e "${_soname}" ]] || ln -s "$(basename "${_lib}")" "${_soname}"
-    [[ -e "${_base}" ]]   || ln -s "${_soname_name}" "${_base}"
+    if [[ -L "${_soname}" ]]; then
+      ln -sfn "$(basename "${_lib}")" "${_soname}"
+    elif [[ ! -e "${_soname}" ]]; then
+      ln -s "$(basename "${_lib}")" "${_soname}"
+    fi
+
+    if [[ -L "${_base}" ]]; then
+      ln -sfn "${_soname_name}" "${_base}"
+    elif [[ ! -e "${_base}" ]]; then
+      ln -s "${_soname_name}" "${_base}"
+    fi
   done
 }
 
