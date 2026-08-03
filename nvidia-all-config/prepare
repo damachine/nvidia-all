@@ -79,6 +79,7 @@ _frog_banner() {
   plain '    `:sdNNNNNNNNNNNNNNNNNNNNNNNNNds:`'
   plain '       `-+shdNNNNNNNNNNNNNNNdhs+-`'
   plain '             `.-:///////:-.`'
+  plain ''
 }
 
 # Fetch latest driver version per active series, populates _nvidia_ver_map.
