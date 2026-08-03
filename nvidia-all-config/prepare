@@ -4,7 +4,7 @@
 _current_nvidia=("610" "595" "580" "570" "470")
 
 # Vulkan dev series
-_vulkandev_nvidia="595.44.09"
+_vulkandev_nvidia="595.44.13"
 
 # EOL / legacy driver series
 _eol_nvidia=(
@@ -569,7 +569,8 @@ _runfile_source() {
 
   if [[ "${_branch}" = "vulkandev" ]]; then
     if (( ${_ver%%.*} >= 525 )); then
-      echo "https://developer.nvidia.com/downloads/vulkan-beta-${_ver//.}-linux"
+      #echo "https://developer.nvidia.com/downloads/vulkan-beta-${_ver//.}-linux"
+      echo "https://developer.nvidia.com/downloads/assets/gameworks/downloads/secure/Vulkan_Beta_Drivers/NVIDIA-Linux-x86_64-${_ver}.run"
     elif [[ "${_ver}" = 396* ]]; then
       echo "https://developer.nvidia.com/linux-${_ver//.}"
     else
