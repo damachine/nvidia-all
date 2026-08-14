@@ -133,37 +133,27 @@ _nv_normalize_bool() {
 aggregate_user_config() {
   local _cfg="${_where}/customization.cfg"
 
-  # Resolve _EXT_CONFIG_PATH from the environment or upstream customization file
-  if [[ -z "${_EXT_CONFIG_PATH:-}" ]]; then
-    local _raw
-    _raw="$(grep -m1 '^_EXT_CONFIG_PATH=' "${_cfg}" | cut -d= -f2- | tr -d "'\"")"
-    _EXT_CONFIG_PATH="${_raw/#\~/$HOME}"
-  fi
+  # Collect valid cfg keys to filter env overrides against
+  local -A _keys=()
+  local _k
+  while read -r _k _; do
+    [[ "$_k" =~ ^([A-Za-z_][A-Za-z0-9_]*)= ]] && _keys["${BASH_REMATCH[1]}"]=1
+  done < "$_cfg"
+
+  local _env="$(declare -p -x)"
+
+  source "$_cfg"
+  eval "$_env"
 
   if [[ -f "${_EXT_CONFIG_PATH}" ]]; then
     msg2 "External configuration file ${_EXT_CONFIG_PATH} will be used and will override customization.cfg values."
-  else
-    msg2 "External configuration file ${_EXT_CONFIG_PATH} not found; using customization.cfg only."
+    source "${_EXT_CONFIG_PATH}"
+    eval "$_env"
   fi
 
-  # Collect valid cfg keys to filter env overrides against
-  local -A _keys=()
-  local _k _v
-  while IFS='= ' read -r _k _; do
-    [[ -n "$_k" && "$_k" != '#'* ]] && _keys["$_k"]=1
-  done < "$_cfg"
-
-  # Emit env > ext > cfg, then strip blanks/comments and dedup by key (first wins)
-  {
-    while IFS='=' read -r _k _v; do
-      [[ -v "_keys[$_k]" ]] && printf '%s=%s\n' "$_k" "$_v"
-    done < <(printenv)
-
-    [[ -f "${_EXT_CONFIG_PATH}" ]] && cat "${_EXT_CONFIG_PATH}"
-    cat "$_cfg"
-  } | grep -v -E '^[[:space:]]*(#|$)' \
-    | awk -F= '!seen[$1]++' \
-    > "${_FROGMINER_TARGET:-${_where}/BIG_UGLY_FROGMINER}"
+  for _k in "${!_keys[@]}"; do
+    printf '%s=%q\n' "$_k" "${!_k}"
+  done > "${_FROGMINER_TARGET:-${_where}/BIG_UGLY_FROGMINER}"
 }
 
 # Reset logs directory
