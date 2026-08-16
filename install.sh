@@ -259,6 +259,15 @@ _relocate_elfs() {
         for _dir in gbm nvidia vdpau xorg tls; do
           [[ -d "${_pkgdir}/usr/lib/${_dir}" ]] && mv "${_pkgdir}/usr/lib/${_dir}" "${_pkgdir}/usr/lib64/"
         done
+
+        local _xorg_conf="${_pkgdir}/usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf"
+        if [[ -f "${_xorg_conf}" ]]; then
+          sed -i \
+            -e 's|ModulePath "/usr/lib/nvidia/xorg"|ModulePath "/usr/lib64/nvidia/xorg"|' \
+            -e 's|ModulePath "/usr/lib/xorg/modules"|ModulePath "/usr/lib64/xorg/modules"|' \
+            "${_xorg_conf}"
+        fi
+
         # Move root-level shared libraries (.so / .so.N / .so.N.N.N …).
         find "${_pkgdir}/usr/lib" -maxdepth 1 \( -name '*.so' -o -name '*.so.*' \) \
           -exec mv {} "${_pkgdir}/usr/lib64/" \;
