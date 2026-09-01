@@ -737,6 +737,10 @@ _deb_postinst() {
 
   _write_pkg_template "${_debdir}/DEBIAN/postinst" "deb/postinst.base.in"
 
+  if [[ "${_pkgname}" == "nvidia-utils-tkg" ]]; then
+    _append_pkg_template "${_debdir}/DEBIAN/postinst" "deb/postinst.sysusers.in"
+  fi
+
   if [[ "${_mode}" == "kmod" ]]; then
     _append_pkg_template "${_debdir}/DEBIAN/postinst" "deb/postinst.depmod.in"
     _append_secure_boot_postinst_snippet "${_debdir}/DEBIAN/postinst"
