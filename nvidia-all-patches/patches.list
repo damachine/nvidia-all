@@ -384,6 +384,8 @@ open     610/0001-fix-dsc-correct-RC-parameter-tables-to-match-VESA-DS.patch    
 open     610/0003-fix-dp-add-Bigscreen-Beyond-VR-headset-to-WAR-databa.patch           -        -           610          -            1      .
 # 610.57.04+ includes native Linux 7.2 DRM atomic commit support.
 open     610/kernel-7.2.patch                                                          7.2      7.2.9999    610          610.57.03    1      .
+# Linux 7.3 changes the dmem cgroup region registration API.
+open     610/kernel-7.3.patch                                                          7.3      7.3.9999    610          610.57.04    1      .
 
 
 # ═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
